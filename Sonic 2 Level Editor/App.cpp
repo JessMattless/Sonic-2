@@ -69,12 +69,6 @@ App::App()
 
 	onZoneChange(new Zone(renderer, "Emerald Hill", 1, { 0, 34, 204, 255 }, "Emerald_Hill.png"));
 
-	currentZone->mapSet[20] = 1;
-	currentZone->mapSet[21] = 20;
-	currentZone->mapSet[22] = 3;
-	currentZone->mapSet[23] = 4;
-	//currentZone = new Zone(renderer, "Emerald Hill", 1, {0, 34, 204, 255}, "Emerald_Hill.png");
-
 
 	optionList.push_back(Text(renderer, font, "zoneNameLabel", "Zone Name:", 20, OPTIONS_WIDTH, 0, false));
 	optionList.push_back(Text(renderer, font, "zoneName", currentZone->zoneName,
@@ -235,13 +229,15 @@ void App::onLoop()
 		else printf("Nothing");
 		printf("\n");
 
-		for (int x = 0; x < currentZone->zoneWidth; x++) {
-			for (int y = 0; y < currentZone->zoneHeight; y++) {
-				int xPos = (x * tileSize) + camX;
-				int yPos = (y * tileSize) + camY;
-				if (mouseX >= xPos && mouseX < xPos + tileSize
-					&& mouseY >= yPos && mouseY < yPos + tileSize) {
-					currentZone->mapSet[x + (y * currentZone->zoneWidth)] = activeTile;
+		if (mouseX < SCREEN_WIDTH) {
+			for (int x = 0; x < currentZone->zoneWidth; x++) {
+				for (int y = 0; y < currentZone->zoneHeight; y++) {
+					int xPos = (x * tileSize) + camX;
+					int yPos = (y * tileSize) + camY;
+					if (mouseX >= xPos && mouseX < xPos + tileSize
+						&& mouseY >= yPos && mouseY < yPos + tileSize) {
+						currentZone->mapSet[x + (y * currentZone->zoneWidth)] = activeTile;
+					}
 				}
 			}
 		}
@@ -260,6 +256,31 @@ void App::onLoop()
 			printf("Right Mouse Clicked\n");
 			mouse[SDL_BUTTON_RIGHT] = false;
 		}
+	}
+	if (mouse[SDL_BUTTON_MIDDLE]) {
+		if (mouseX < SCREEN_WIDTH) {
+			for (int x = 0; x < currentZone->zoneWidth; x++) {
+				for (int y = 0; y < currentZone->zoneHeight; y++) {
+					int xPos = (x * tileSize) + camX;
+					int yPos = (y * tileSize) + camY;
+					if (mouseX >= xPos && mouseX < xPos + tileSize
+						&& mouseY >= yPos && mouseY < yPos + tileSize) {
+						int currentPos = x + (y * currentZone->zoneWidth);
+						if (currentZone->mapSet[currentPos] == 0) break;
+						else if (currentZone->mapSet[currentPos] < 400) {
+							currentZone->mapSet[currentPos] += 400;
+							goto endCheck;
+						}
+						else {
+							currentZone->mapSet[currentPos] -= 400;
+							goto endCheck;
+						}
+					}
+				}
+			}
+		}
+	endCheck:
+		mouse[SDL_BUTTON_MIDDLE] = false;
 	}
 
 	if (mouseX >= SCREEN_WIDTH + 20 && mouseX <= SCREEN_WIDTH + OPTIONS_WIDTH - 20

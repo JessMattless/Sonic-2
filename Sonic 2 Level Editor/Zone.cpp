@@ -42,6 +42,10 @@ void Zone::renderTileSet()
 void Zone::renderZone(float camX, float camY, int tileSize) {
 	for (int i = 0; i < mapSet.size(); i++) {
 		int tileType = mapSet[i];
+		bool flipped = tileType > 400 ? true : false;
+
+		if (flipped) tileType -= 400;
+
 		if (i == zoneWidth + 10) {
 			printf("Tile: ");
 			printf(std::to_string(tileType).c_str());
@@ -70,7 +74,8 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 			textureTile.w = 16;
 			textureTile.h = 16;
 
-			SDL_RenderTexture(renderer, tileSet, &textureTile, &worldTile);
+			if (flipped) SDL_RenderTextureRotated(renderer, tileSet, &textureTile, &worldTile, 0.0, NULL, SDL_FLIP_HORIZONTAL);
+			else SDL_RenderTexture(renderer, tileSet, &textureTile, &worldTile);
 		}
 	}
 	//for (int x = 0; x < zoneWidth; x++) {
