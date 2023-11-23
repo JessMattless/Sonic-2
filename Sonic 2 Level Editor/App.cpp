@@ -21,6 +21,25 @@ void renderRect(SDL_Renderer* renderer, float x, float y, int w, int h, SDL_Colo
 	SDL_RenderRect(renderer, &rect);
 }
 
+void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) {
+	if (selectedItem->name == "zoneName") {
+		if (save) currentZone->zoneName = selectedItem->text;
+		else selectedItem->text = currentZone->zoneName;
+	}
+	else if (selectedItem->name == "actNo") {
+		if (save) {
+			selectedItem->text.erase(0, selectedItem->text.find_first_not_of('0'));
+			if (selectedItem->text.size() == 0 || selectedItem->text == "0") selectedItem->text = "1";
+			currentZone->actNo = stoi(selectedItem->text);
+		}
+		else {
+			selectedItem->text = std::to_string(currentZone->actNo);
+		}
+	}
+
+	selectedItem->updateText();
+}
+
 App::App()
 {
 	_running = true;
@@ -43,16 +62,16 @@ App::App()
 	//currentZone = new Zone(renderer, "Emerald Hill", 1, {0, 34, 204, 255}, "Emerald_Hill.png");
 
 
-	optionList.push_back(Text(renderer, font, "Act Name:", 20, OPTIONS_WIDTH, 0, false));
-	optionList.push_back(Text(renderer, font, currentZone->zoneName,
+	optionList.push_back(Text(renderer, font, "zoneNameLabel", "Zone Name:", 20, OPTIONS_WIDTH, 0, false));
+	optionList.push_back(Text(renderer, font, "zoneName", currentZone->zoneName,
 		optionList[0].x + optionList[0].width, optionList[0].y, OPTIONS_WIDTH - 40 - optionList[0].width));
-	optionList.push_back(Text(renderer, font, "Act Number:", 20, OPTIONS_WIDTH + 50, 0, false));
-	optionList.push_back(Text(renderer, font, std::to_string(currentZone->actNo),
+	optionList.push_back(Text(renderer, font, "actNoLabel", "Act Number:", 20, OPTIONS_WIDTH + 50, 0, false));
+	optionList.push_back(Text(renderer, font, "actNo", std::to_string(currentZone->actNo),
 		optionList[2].x + optionList[2].width, optionList[2].y, OPTIONS_WIDTH - 40 - optionList[2].width, true, true, true));
 
 
-	optionList.push_back(Button(renderer, font, "Save", OPTIONS_WIDTH - 120, SCREEN_HEIGHT - 50, 100, true, false));
-	optionList.push_back(Button(renderer, font, "New", 20, SCREEN_HEIGHT - 50, 100, true, false));
+	optionList.push_back(Button(renderer, font, "SaveButton", "Save", OPTIONS_WIDTH - 120, SCREEN_HEIGHT - 50, 100, true, false));
+	optionList.push_back(Button(renderer, font, "newButton", "New", 20, SCREEN_HEIGHT - 50, 100, true, false));
 
 	onExecute();
 }
@@ -88,10 +107,7 @@ void App::onEvent(SDL_Event* event)
 		break;
 	case SDL_EVENT_KEY_DOWN:
 		keyboard[event->key.keysym.sym] = true;
-		if (selectedItem != nullptr) {
-			if (shift) selectedItem->onType(event->key.keysym.sym, true);
-			else selectedItem->onType(event->key.keysym.sym, false);
-		}
+		if (selectedItem != nullptr) selectedItem->onType(event->key.keysym.sym, shift);
 		break;
 	case SDL_EVENT_KEY_UP:
 		keyboard[event->key.keysym.sym] = false;
@@ -157,6 +173,20 @@ void App::onLoop()
 			if (tileSize > 16) tileSize--;
 		}
 	}
+	else {
+		if (keyboard[SDLK_RETURN]) {
+			handleTextboxInput(selectedItem, currentZone, true);
+
+			selectedItem->selected = false;
+			selectedItem = nullptr;
+		}
+		if (keyboard[SDLK_ESCAPE]) {
+			handleTextboxInput(selectedItem, currentZone, false);
+
+			selectedItem->selected = false;
+			selectedItem = nullptr;
+		}
+	}
 	
 	if (mouse[SDL_BUTTON_LEFT]) {
 		printf("Left Mouse Clicked\n");
@@ -168,6 +198,8 @@ void App::onLoop()
 			}
 			else {
 				if (selectedItem != nullptr) {
+					handleTextboxInput(selectedItem, currentZone, true);
+
 					selectedItem->selected = false;
 					selectedItem = nullptr;
 				}
@@ -239,6 +271,9 @@ void App::onRender()
 			}
 		}
 	}
+
+	printf(std::to_string(currentZone->actNo).c_str());
+	printf("\n");
 
 	SDL_RenderPresent(renderer);
 }

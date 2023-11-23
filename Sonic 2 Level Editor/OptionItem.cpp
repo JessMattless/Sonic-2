@@ -1,8 +1,9 @@
 #include "OptionItem.h"
 #include <iostream>
 
-OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, std::string text, float x, float y, int width, bool hoverable, bool editable, bool numbersOnly)
+OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, std::string name, std::string text, float x, float y, int width, bool hoverable, bool editable, bool numbersOnly)
 {
+	this->name = name;
 	this->text = text;
 	this->x = x;
 	this->y = y;
@@ -17,9 +18,7 @@ OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, std::string text,
 	this->renderer = renderer;
 	this->font = font;
 
-	TTF_SizeUTF8(font, text.c_str(), &textWidth, &height);
-	surface = TTF_RenderUTF8_Solid(font, text.c_str(), { 255, 255, 255, 255 });
-	message = SDL_CreateTextureFromSurface(renderer, surface);
+	updateText();
 
 	if (this->width == 0) this->width = textWidth + 30;
 }
@@ -68,6 +67,11 @@ void OptionItem::onType(char ch, bool shift)
 		else text.push_back(ch);
 	}
 
+	updateText();
+}
+
+void OptionItem::updateText()
+{
 	TTF_SizeUTF8(font, text.c_str(), &textWidth, &height);
 	surface = TTF_RenderUTF8_Solid(font, text.c_str(), { 255, 255, 255, 255 });
 	message = SDL_CreateTextureFromSurface(renderer, surface);
