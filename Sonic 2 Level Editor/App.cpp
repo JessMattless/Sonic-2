@@ -40,6 +40,15 @@ void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) 
 	selectedItem->updateText();
 }
 
+int* getActiveTilePos(int tile, int tileScreenSize) {
+	int pos[2];
+
+	pos[0] = (tile % 20) * tileScreenSize + SCREEN_WIDTH + 20;
+	pos[1] = (tile / 20) * tileScreenSize + 20;
+
+	return pos;
+}
+
 App::App()
 {
 	_running = true;
@@ -59,6 +68,11 @@ App::App()
 	font = TTF_OpenFont("../sonic-the-hedgehog-2-hud-font.ttf", 30);
 
 	onZoneChange(new Zone(renderer, "Emerald Hill", 1, { 0, 34, 204, 255 }, "Emerald_Hill.png"));
+
+	currentZone->mapSet[20] = 1;
+	currentZone->mapSet[21] = 20;
+	currentZone->mapSet[22] = 3;
+	currentZone->mapSet[23] = 4;
 	//currentZone = new Zone(renderer, "Emerald Hill", 1, {0, 34, 204, 255}, "Emerald_Hill.png");
 
 
@@ -206,11 +220,33 @@ void App::onLoop()
 			}
 		}
 
+		for (int x = 0; x < 20; x++) {
+			for (int y = 0; y < 20; y++) {
+				int xPos = (x * tileScreenSize) + SCREEN_WIDTH + 20;
+				int yPos = (y * tileScreenSize) + 20;
+				if (mouseX >= xPos && mouseX < xPos + tileScreenSize
+					&& mouseY >= yPos && mouseY < yPos + tileScreenSize) {
+					activeTile = x + (y * 20);
+				}
+			}
+		}
+
 		if (selectedItem != nullptr) printf(selectedItem->text.c_str());
 		else printf("Nothing");
 		printf("\n");
 
-		mouse[SDL_BUTTON_LEFT] = false;
+		for (int x = 0; x < currentZone->zoneWidth; x++) {
+			for (int y = 0; y < currentZone->zoneHeight; y++) {
+				int xPos = (x * tileSize) + camX;
+				int yPos = (y * tileSize) + camY;
+				if (mouseX >= xPos && mouseX < xPos + tileSize
+					&& mouseY >= yPos && mouseY < yPos + tileSize) {
+					currentZone->mapSet[x + (y * currentZone->zoneWidth)] = activeTile;
+				}
+			}
+		}
+
+		if (mouseX > SCREEN_WIDTH) mouse[SDL_BUTTON_LEFT] = false;
 	}
 	if (mouse[SDL_BUTTON_RIGHT]) {
 		if (mouseX > 0 && mouseX < SCREEN_WIDTH
@@ -228,6 +264,7 @@ void App::onLoop()
 
 	if (mouseX >= SCREEN_WIDTH + 20 && mouseX <= SCREEN_WIDTH + OPTIONS_WIDTH - 20
 		&& mouseY >= 20 && mouseY <= OPTIONS_WIDTH - 20) {
+		// Hover over tileset
 			cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 	}
 
@@ -261,7 +298,9 @@ void App::onRender()
 		option.render();
 	}
 
-	int tileScreenSize = 22;
+	int* activeTilePos = getActiveTilePos(activeTile, tileScreenSize);
+	renderRect(renderer, activeTilePos[0], activeTilePos[1], tileScreenSize, tileScreenSize, {255, 255, 255 ,255});
+
 	for (int x = SCREEN_WIDTH + 20; x < SCREEN_WIDTH + OPTIONS_WIDTH - 40; x += tileScreenSize) {
 		// For width of tile set on screen, step up by size of one tile
 		for (int y = 20; y < OPTIONS_WIDTH - 40; y += tileScreenSize) {
@@ -272,7 +311,7 @@ void App::onRender()
 		}
 	}
 
-	printf(std::to_string(currentZone->actNo).c_str());
+	printf(std::to_string(activeTile).c_str());
 	printf("\n");
 
 	SDL_RenderPresent(renderer);

@@ -23,6 +23,9 @@ private:
 	SDL_Texture* texture = NULL;
 	TTF_Font* font = NULL;
 
+	int tileScreenSize = 22;
+	int activeTile = 0;
+
 	float camX, camY;
 	float mouseX, mouseY;
 	float movementX, movementY;
@@ -37,7 +40,6 @@ private:
 	std::map<int, bool> mouse;
 
 	SDL_Texture* currentTileSet;
-	std::vector<int> currentMapSet;
 	std::vector<OptionItem> optionList;
 
 public:

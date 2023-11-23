@@ -15,10 +15,14 @@ Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color ba
 	this->backgroundColor = background;
 	this->tileSet = SDL_CreateTextureFromSurface(renderer, tileSetSurface);
 
-	if (width > 100) this->zoneWidth = width;
+
+	if (width >= 100) this->zoneWidth = width;
 	else this->zoneWidth = 100;
-	if (height > 64) this->zoneHeight = height;
+	if (height >= 64) this->zoneHeight = height;
 	else this->zoneHeight = 64;
+
+	//this->currentMapSet.reserve(zoneWidth * zoneHeight);
+	for (int i = 0; i < zoneWidth * zoneHeight; i++) mapSet.push_back(0);
 }
 
 void Zone::renderTileSet()
@@ -36,17 +40,50 @@ void Zone::renderTileSet()
 }
 
 void Zone::renderZone(float camX, float camY, int tileSize) {
-	for (int x = 0; x < zoneWidth; x++) {
-		for (int y = 0; y < zoneHeight; y++) {
-			SDL_FRect rect;
-			rect.x = (x * tileSize) + camX;
-			rect.y = (y * tileSize) + camY;
-			rect.w = tileSize;
-			rect.h = tileSize;
+	for (int i = 0; i < mapSet.size(); i++) {
+		int tileType = mapSet[i];
+		if (i == zoneWidth + 10) {
+			printf("Tile: ");
+			printf(std::to_string(tileType).c_str());
+			printf("\n");
+		}
 
+
+		int xPos = (i % zoneWidth) * tileSize + camX;
+		int yPos = (i / zoneWidth) * tileSize + camY;
+
+		SDL_FRect worldTile;
+		worldTile.x = xPos;
+		worldTile.y = yPos;
+		worldTile.w = tileSize;
+		worldTile.h = tileSize;
+
+		if (tileType == 0) {
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
 			SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-			SDL_RenderRect(renderer, &rect);
+			SDL_RenderRect(renderer, &worldTile);
+		}
+		else {
+			SDL_FRect textureTile;
+			textureTile.x = (tileType % 20) * 16;
+			textureTile.y = (tileType / 20) * 16;
+			textureTile.w = 16;
+			textureTile.h = 16;
+
+			SDL_RenderTexture(renderer, tileSet, &textureTile, &worldTile);
 		}
 	}
+	//for (int x = 0; x < zoneWidth; x++) {
+	//	for (int y = 0; y < zoneHeight; y++) {
+	//		SDL_FRect rect;
+	//		rect.x = (x * tileSize) + camX;
+	//		rect.y = (y * tileSize) + camY;
+	//		rect.w = tileSize;
+	//		rect.h = tileSize;
+
+	//		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
+	//		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+	//		SDL_RenderRect(renderer, &rect);
+	//	}
+	//}
 }
