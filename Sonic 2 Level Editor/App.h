@@ -54,5 +54,5 @@ public:
 
 	void onCleanup();
 
-	void onZoneChange(Zone* zone);
+	void loadDefaultZone();
 };

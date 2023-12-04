@@ -46,13 +46,6 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 
 		if (flipped) tileType -= 400;
 
-		if (i == zoneWidth + 10) {
-			//printf("Tile: ");
-			//printf(std::to_string(tileType).c_str());
-			//printf("\n");
-		}
-
-
 		int xPos = (i % zoneWidth) * tileSize + camX;
 		int yPos = (i / zoneWidth) * tileSize + camY;
 
@@ -78,17 +71,4 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 			else SDL_RenderTexture(renderer, tileSet, &textureTile, &worldTile);
 		}
 	}
-	//for (int x = 0; x < zoneWidth; x++) {
-	//	for (int y = 0; y < zoneHeight; y++) {
-	//		SDL_FRect rect;
-	//		rect.x = (x * tileSize) + camX;
-	//		rect.y = (y * tileSize) + camY;
-	//		rect.w = tileSize;
-	//		rect.h = tileSize;
-
-	//		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
-	//		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	//		SDL_RenderRect(renderer, &rect);
-	//	}
-	//}
 }

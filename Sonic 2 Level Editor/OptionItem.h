@@ -18,6 +18,8 @@ private:
 
 	SDL_Renderer* renderer;
 	TTF_Font* font;
+
+	std::string defaultText;
 public:
 	SDL_FRect* rect;
 	bool hovered = false;
@@ -31,5 +33,7 @@ public:
 	void calculateTextSize();
 	void render();
 	void onType(char ch);
+	void updateSize();
 	void updateText();
+	void returnToDefault();
 };

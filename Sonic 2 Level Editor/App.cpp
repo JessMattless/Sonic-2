@@ -52,10 +52,10 @@ App::App()
 
 	selectedItem = nullptr;
 
-	onZoneChange(new Zone(renderer, "Emerald Hill", 1, { 0, 34, 204, 255 }, "Emerald_Hill.png"));
+	loadDefaultZone();
 	
-	optionMenu->addMenuItem(TextInput, "ZoneName", "Zone Name", "Zone Name:");
-	optionMenu->addMenuItem(NumberInput, "ActNo", "1", "Act Number:");
+	optionMenu->addMenuItem(TextInput, "ZoneName", currentZone->zoneName, "Zone Name:");
+	optionMenu->addMenuItem(NumberInput, "ActNo", std::to_string(currentZone->actNo), "Act Number:");
 	optionMenu->addMenuItem(Button, "SaveButton", "Save");
 	optionMenu->addMenuItem(Button, "LoadButton", "Load", "", true);
 	optionMenu->addMenuItem(Button, "NewButton", "New", "", true);
@@ -119,8 +119,10 @@ void App::onEvent(SDL_Event* event)
 
 void App::onLoop()
 {
+	// Default cursor
 	SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
 
+	// If hovering over an option in the menu, set it as hovered and change the cursor.
 	for (int i = 0; i < optionMenu->options.size(); i++) {
 		if (optionMenu->options[i].type == Button || optionMenu->options[i].type == TextInput || optionMenu->options[i].type == NumberInput) {
 			if (mouseX >= optionMenu->options[i].rect->x && mouseX <= optionMenu->options[i].rect->x + optionMenu->options[i].rect->w
@@ -132,53 +134,64 @@ void App::onLoop()
 		}
 	}
 
+	// Check if a menu option is selected
 	if (selectedItem == nullptr) {
-		if (keyboard[SDLK_a] || keyboard[SDLK_LEFT]) {
-			//printf("Moving Left\n");
-			camX += tileSize;
-		}
-		if (keyboard[SDLK_d] || keyboard[SDLK_RIGHT]) {
-			//printf("Moving Right\n");
-			camX -= tileSize;
-		}
-		if (keyboard[SDLK_w] || keyboard[SDLK_UP]) {
-			//printf("Moving Up\n");
-			camY += tileSize;
-		}
-		if (keyboard[SDLK_s] || keyboard[SDLK_DOWN]) {
-			//printf("Moving Down\n");
-			camY -= tileSize;
-		}
+		// Camera movement using keyboard keys
+		if (keyboard[SDLK_a] || keyboard[SDLK_LEFT]) camX += tileSize;
+		if (keyboard[SDLK_d] || keyboard[SDLK_RIGHT]) camX -= tileSize;
+		if (keyboard[SDLK_w] || keyboard[SDLK_UP]) camY += tileSize;
+		if (keyboard[SDLK_s] || keyboard[SDLK_DOWN]) camY -= tileSize;
 	
-		if (keyboard[SDLK_EQUALS] || mouseWheel > 0) {
-			if (tileSize < 64) tileSize++;
-		}
-		if (keyboard[SDLK_MINUS] || mouseWheel < 0) {
-			if (tileSize > 16) tileSize--;
-		}
+		// Camera zoom using keyboard keys
+		if (keyboard[SDLK_EQUALS] || mouseWheel > 0) if (tileSize < 64) tileSize++;
+		if (keyboard[SDLK_MINUS] || mouseWheel < 0) if (tileSize > 16) tileSize--;
 	}
 	else {
-		if (keyboard[SDLK_RETURN]) {
-			handleTextboxInput(selectedItem, currentZone, true);
+		if (selectedItem->type == TextInput || selectedItem->type == NumberInput) {
+			// If return is pressed, confirm edit to menu option
+			if (keyboard[SDLK_RETURN]) {
+				handleTextboxInput(selectedItem, currentZone, true);
 
-			selectedItem->selected = false;
-			selectedItem = nullptr;
+				selectedItem->selected = false;
+				selectedItem = nullptr;
+			}
+			// If escape is pressed, disgard edit to menu option
+			if (keyboard[SDLK_ESCAPE]) {
+				handleTextboxInput(selectedItem, currentZone, false);
+
+				selectedItem->selected = false;
+				selectedItem = nullptr;
+			}
 		}
-		if (keyboard[SDLK_ESCAPE]) {
-			handleTextboxInput(selectedItem, currentZone, false);
-
+		else if (selectedItem->type == Button) {
+			if (selectedItem->name == "NewButton") {
+				if (selectedItem->text != "Sure?") {
+					selectedItem->color = { 255, 0, 0 };
+					selectedItem->text = "Sure?";
+					selectedItem->updateSize();
+				}
+				else {
+					// Make new file
+					loadDefaultZone();
+					selectedItem->returnToDefault();
+				}
+			}
+			else if (selectedItem->name == "SaveButton") {
+				//selectedItem->returnToDefault();
+			}
+			//TODO: sort out button inputs for individual buttons.
 			selectedItem->selected = false;
 			selectedItem = nullptr;
 		}
 	}
 	
 	if (mouse[SDL_BUTTON_LEFT]) {
-		//printf("Left Mouse Clicked\n");
-
+		// Check if an option has been clicked. If it has, then if it can be selected, select it.
+		// Else, if anywhere else is clicked then unselect any selected items.
 		for (int i = 0; i < optionMenu->options.size(); i++) {
-			if (optionMenu->options[i].type == TextInput || optionMenu->options[i].type == NumberInput) {
-				if (optionMenu->options[i].hovered) {
-					//if (selectedItem != nullptr) selectedItem->selected = false;
+			if (optionMenu->options[i].hovered) {
+				if (optionMenu->options[i].type == TextInput || optionMenu->options[i].type == NumberInput 
+					|| optionMenu->options[i].type == Button) {
 					selectedItem = &optionMenu->options[i];
 					selectedItem->selected = true;
 					break;
@@ -192,8 +205,10 @@ void App::onLoop()
 					selectedItem = nullptr;
 				}
 			}
+			if (optionMenu->options[i].type == Button && !optionMenu->options[i].selected) optionMenu->options[i].returnToDefault();
 		}
 
+		// If a tile is clicked on the tilemap within the options menu, then set it as the active drawing tile.
 		for (int x = 0; x < 20; x++) {
 			for (int y = 0; y < 20; y++) {
 				int xPos = (x * tileScreenSize) + SCREEN_WIDTH + 20;
@@ -205,10 +220,7 @@ void App::onLoop()
 			}
 		}
 
-		//if (selectedItem != nullptr) printf(selectedItem->text.c_str());
-		//else printf("Nothing");
-		//printf("\n");
-
+		// If the mouse is clicked outside of the option menu, place a tile at the selected area.
 		if (mouseX < SCREEN_WIDTH) {
 			for (int x = 0; x < currentZone->zoneWidth; x++) {
 				for (int y = 0; y < currentZone->zoneHeight; y++) {
@@ -222,22 +234,26 @@ void App::onLoop()
 			}
 		}
 
+		// If mouse is being held in the main screen, and is moved to the menu, unclick the mouse
 		if (mouseX > SCREEN_WIDTH) mouse[SDL_BUTTON_LEFT] = false;
 	}
 	if (mouse[SDL_BUTTON_RIGHT]) {
+		// if the mouse is within the bounds of the editor (not including options)
+		// then move the camera by the amount dragged by the mouse.
 		if (mouseX > 0 && mouseX < SCREEN_WIDTH
 			&& mouseY > 0 && mouseY < SCREEN_HEIGHT) {
 			cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
-			//printf("Right Mouse Held\n");
 			camX += tileSize * movementX * 2;
 			camY += tileSize * movementY * 2;
 		}
+		// If the mouse is in the options menu, unclick the mouse.
 		else {
-			//printf("Right Mouse Clicked\n");
 			mouse[SDL_BUTTON_RIGHT] = false;
 		}
 	}
 	if (mouse[SDL_BUTTON_MIDDLE]) {
+		// If the mouse is over an existing tile in the editor, flip the tile horizontally.
+		// TODO: change the way this works so it works correctly with the planned tilemapping system.
 		if (mouseX < SCREEN_WIDTH) {
 			for (int x = 0; x < currentZone->zoneWidth; x++) {
 				for (int y = 0; y < currentZone->zoneHeight; y++) {
@@ -263,12 +279,13 @@ void App::onLoop()
 		mouse[SDL_BUTTON_MIDDLE] = false;
 	}
 
+	// Change the cursor when hovering over the tileset in the options menu
 	if (mouseX >= SCREEN_WIDTH + 20 && mouseX <= SCREEN_WIDTH + OPTIONS_WIDTH - 20
 		&& mouseY >= 20 && mouseY <= OPTIONS_WIDTH - 20) {
-		// Hover over tileset
 			cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 	}
 
+	// Limit the bounds of the camera on the X and Y axis so you can't move too far from the level.
 	if (camX > tileSize * 10) camX = tileSize * 10;
 	else if (camX < -((currentZone->zoneWidth * tileSize) + (tileSize * 10) - SCREEN_WIDTH)) 
 		camX = -((currentZone->zoneWidth * tileSize) + (tileSize * 10) - SCREEN_WIDTH);
@@ -277,6 +294,7 @@ void App::onLoop()
 	else if (camY < -((currentZone->zoneHeight * tileSize) + (tileSize * 10) - SCREEN_HEIGHT)) 
 		camY = -((currentZone->zoneHeight * tileSize) + (tileSize * 10) - SCREEN_HEIGHT);
 
+	// Reset movement/zoom vectors for the next frame.
 	mouseWheel = 0; movementX = 0; movementY = 0;
 	SDL_SetCursor(cursor);
 }
@@ -290,19 +308,22 @@ void App::onRender()
 
 	currentZone->renderZone(camX, camY, tileSize);
 
+	// Render the options menu background/border.
 	gameRenderer->renderFilledRect({ SCREEN_WIDTH, 0, OPTIONS_WIDTH, SCREEN_HEIGHT }, currentZone->backgroundColor);
 	gameRenderer->renderRect({ SCREEN_WIDTH, 0, OPTIONS_WIDTH, SCREEN_HEIGHT }, { 0, 0, 0, 120 });
+
 	currentZone->renderTileSet();
 
 	for (OptionItem option : optionMenu->options) {
 		option.render();
 	}
 
+	// Render a rect over the selected tile to give indication it is selected.
 	int* activeTilePos = getActiveTilePos(activeTile, tileScreenSize);
 	gameRenderer->renderRect({ (float)activeTilePos[0], (float)activeTilePos[1], (float)tileScreenSize, (float)tileScreenSize }, { 255, 255, 255 ,255 });
 
+	// when hovering over a tile in the options menu, highlight it.
 	for (int x = SCREEN_WIDTH + 20; x < SCREEN_WIDTH + OPTIONS_WIDTH - 40; x += tileScreenSize) {
-		// For width of tile set on screen, step up by size of one tile
 		for (int y = 20; y < OPTIONS_WIDTH - 40; y += tileScreenSize) {
 			if (mouseX >= x && mouseX < x + tileScreenSize
 				&& mouseY >= y && mouseY < y + tileScreenSize) {
@@ -310,9 +331,6 @@ void App::onRender()
 			}
 		}
 	}
-
-	//printf(std::to_string(activeTile).c_str());
-	//printf("\n");
 
 	SDL_RenderPresent(renderer);
 }
@@ -328,10 +346,15 @@ void App::onCleanup()
 	SDL_Quit();
 }
 
-void App::onZoneChange(Zone* zone)
+void App::loadDefaultZone()
 {
-	currentZone = zone;
+	currentZone = new Zone(renderer, "Zone name", 1, { 0, 34, 204, 255 }, "Emerald_Hill.png");
 	currentTileSet = currentZone->tileSet;
+	for (int i = 0; i < optionMenu->options.size(); i++) {
+		if (optionMenu->options[i].name == "ZoneName") optionMenu->options[i].text = currentZone->zoneName;
+		else if (optionMenu->options[i].name == "ActNo") optionMenu->options[i].text = std::to_string(currentZone->actNo);
+		optionMenu->options[i].updateText();
+	}
 }
 
 int main(int argc, char* argv[]) {

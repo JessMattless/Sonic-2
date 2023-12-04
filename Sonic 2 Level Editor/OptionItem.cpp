@@ -15,6 +15,7 @@ OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::s
 
 	this->name = name;
 	this->text = bodyText;
+	this->defaultText = bodyText;
 
 	this->rect = rect;
 	this->color = color;
@@ -32,8 +33,6 @@ OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::s
 
 
 	updateText();
-
-	std::cout << rect->x << " | " << rect->y << " | " << rect->w << " | " << rect->h << std::endl;
 }
 
 // Calculate the width and height of the option text
@@ -62,27 +61,30 @@ void OptionItem::onType(char ch)
 		// Backspace
 		if (ch == 8 && text.size() > 0) {
 			text.pop_back();
-			std::cout << "backspace" << std::endl;
 		}
 		// Numbers
 		else if ((ch >= 48 && ch <= 57)) {
-			std::cout << ch << std::endl;
 			text.push_back(ch);
 		}
 		// Space
 		else if (type != NumberInput && ch == 32) {
 			text.push_back(' ');
-			std::cout << "space" << std::endl;
 		}
 		// Lowercase/Uppercase
 		else if (type != NumberInput && ((ch >= 97 && ch <= 122))) {
-			std::cout << ch << std::endl;
 			if (SDL_GetModState() & SDL_KMOD_SHIFT) text.push_back(ch - 32);
 			else text.push_back(ch);
 		}
 
 		updateText();
 	}
+}
+
+void OptionItem::updateSize()
+{
+	updateText();
+	this->rect->w = textSize[0] + (MENU_PADDING * 2);
+	this->rect->h = textSize[1];
 }
 
 // Update text size/length/position
@@ -93,4 +95,11 @@ void OptionItem::updateText()
 	textRect->h = textSize[1];
 	surface = TTF_RenderUTF8_Blended(font, text.c_str(), { 255, 255, 255, 255 });
 	message = SDL_CreateTextureFromSurface(renderer, surface);
+}
+
+void OptionItem::returnToDefault()
+{
+	this->color = { 0, 0, 0 };
+	this->text = defaultText;
+	updateSize();
 }
