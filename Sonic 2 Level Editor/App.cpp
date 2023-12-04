@@ -165,18 +165,22 @@ void App::onLoop()
 		}
 		else if (selectedItem->type == Button) {
 			if (selectedItem->name == "NewButton") {
-				if (selectedItem->text != "Sure?") {
-					selectedItem->color = { 255, 0, 0 };
-					selectedItem->text = "Sure?";
-					selectedItem->updateSize();
-				}
-				else {
-					// Make new file
-					loadDefaultZone();
-					selectedItem->returnToDefault();
-				}
+				int result = 0;
+
+				const SDL_MessageBoxButtonData buttons[] = { 
+					{SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, -1, "No"}, 
+					{SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Yes"} 
+				};
+
+				SDL_MessageBoxData boxData{ SDL_MESSAGEBOX_WARNING, window, "Confirm", "Are you Sure?", 2, buttons, NULL };
+				SDL_ShowMessageBox(&boxData, &result);
+
+				if (result == 1) loadDefaultZone();
 			}
 			else if (selectedItem->name == "SaveButton") {
+				//selectedItem->returnToDefault();
+			}
+			else if (selectedItem->name == "LoadButton") {
 				//selectedItem->returnToDefault();
 			}
 			//TODO: sort out button inputs for individual buttons.
@@ -205,7 +209,6 @@ void App::onLoop()
 					selectedItem = nullptr;
 				}
 			}
-			if (optionMenu->options[i].type == Button && !optionMenu->options[i].selected) optionMenu->options[i].returnToDefault();
 		}
 
 		// If a tile is clicked on the tilemap within the options menu, then set it as the active drawing tile.
