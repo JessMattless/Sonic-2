@@ -2,25 +2,7 @@
 #include <SDL3/SDL_image.h>
 #include <cmath>
 
-
-void renderFilledRect(SDL_Renderer* renderer, float x, float y, int w, int h, SDL_Color color) {
-	SDL_FRect rect;
-	rect.x = x; rect.y = y;
-	rect.w = w; rect.h = h;
-	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderFillRect(renderer, &rect);
-}
-
-void renderRect(SDL_Renderer* renderer, float x, float y, int w, int h, SDL_Color color) {
-	SDL_FRect rect;
-	rect.x = x; rect.y = y;
-	rect.w = w; rect.h = h;
-	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderRect(renderer, &rect);
-}
-
+// Handle input to the custom textboxes
 void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) {
 	if (selectedItem->name == "zoneName") {
 		if (save) currentZone->zoneName = selectedItem->text;
@@ -40,6 +22,7 @@ void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) 
 	selectedItem->updateText();
 }
 
+// Get the position of the selected tile in the options bar
 int* getActiveTilePos(int tile, int tileScreenSize) {
 	int pos[2];
 
@@ -57,29 +40,25 @@ App::App()
 	window = SDL_CreateWindow("Sonic 2 Level Editor", (SCREEN_WIDTH + OPTIONS_WIDTH), SCREEN_HEIGHT, 0);
 	renderer = SDL_CreateRenderer(window, NULL, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
-	//SDL_SetRenderScale(renderer, 2, 2);
+
+	TTF_Init();
+	this->font = TTF_OpenFont("../sonic-the-hedgehog-2-hud-font.ttf", 30);
+
+	this->gameRenderer = new Renderer(renderer);
+	this->optionMenu = new OptionMenu(renderer, font, {0, 0, 0, 120});
 
 	camX = 0; camY = 0;
 	tileSize = 16;
 
 	selectedItem = nullptr;
 
-	TTF_Init();
-	font = TTF_OpenFont("../sonic-the-hedgehog-2-hud-font.ttf", 30);
-
 	onZoneChange(new Zone(renderer, "Emerald Hill", 1, { 0, 34, 204, 255 }, "Emerald_Hill.png"));
-
-
-	optionList.push_back(Text(renderer, font, "zoneNameLabel", "Zone Name:", 20, OPTIONS_WIDTH, 0, false));
-	optionList.push_back(Text(renderer, font, "zoneName", currentZone->zoneName,
-		optionList[0].x + optionList[0].width, optionList[0].y, OPTIONS_WIDTH - 40 - optionList[0].width));
-	optionList.push_back(Text(renderer, font, "actNoLabel", "Act Number:", 20, OPTIONS_WIDTH + 50, 0, false));
-	optionList.push_back(Text(renderer, font, "actNo", std::to_string(currentZone->actNo),
-		optionList[2].x + optionList[2].width, optionList[2].y, OPTIONS_WIDTH - 40 - optionList[2].width, true, true, true));
-
-
-	optionList.push_back(Button(renderer, font, "SaveButton", "Save", OPTIONS_WIDTH - 120, SCREEN_HEIGHT - 50, 100, true, false));
-	optionList.push_back(Button(renderer, font, "newButton", "New", 20, SCREEN_HEIGHT - 50, 100, true, false));
+	
+	optionMenu->addMenuItem(TextInput, "ZoneName", "Zone Name", "Zone Name:");
+	optionMenu->addMenuItem(NumberInput, "ActNo", "1", "Act Number:");
+	optionMenu->addMenuItem(Button, "SaveButton", "Save");
+	optionMenu->addMenuItem(Button, "LoadButton", "Load", "", true);
+	optionMenu->addMenuItem(Button, "NewButton", "New", "", true);
 
 	onExecute();
 }
@@ -115,7 +94,7 @@ void App::onEvent(SDL_Event* event)
 		break;
 	case SDL_EVENT_KEY_DOWN:
 		keyboard[event->key.keysym.sym] = true;
-		if (selectedItem != nullptr) selectedItem->onType(event->key.keysym.sym, shift);
+		if (selectedItem != nullptr) selectedItem->onType(event->key.keysym.sym);
 		break;
 	case SDL_EVENT_KEY_UP:
 		keyboard[event->key.keysym.sym] = false;
@@ -136,41 +115,38 @@ void App::onEvent(SDL_Event* event)
 		mouseWheel = event->wheel.y;
 		break;
 	}
-
-	if (keyboard[SDLK_LSHIFT] || keyboard[SDLK_RSHIFT]) shift = true;
-	else shift = false;
 }
 
 void App::onLoop()
 {
 	SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
 
-	for (int i = 0; i < optionList.size(); i++) {
-		if (optionList[i].hoverable) {
-			if (mouseX >= optionList[i].x + SCREEN_WIDTH && mouseX <= optionList[i].x + optionList[i].width + SCREEN_WIDTH
-				&& mouseY >= optionList[i].y && mouseY <= optionList[i].y + optionList[i].height) {
+	for (int i = 0; i < optionMenu->options.size(); i++) {
+		if (optionMenu->options[i].type == Button || optionMenu->options[i].type == TextInput || optionMenu->options[i].type == NumberInput) {
+			if (mouseX >= optionMenu->options[i].rect->x && mouseX <= optionMenu->options[i].rect->x + optionMenu->options[i].rect->w
+				&& mouseY >= optionMenu->options[i].rect->y && mouseY <= optionMenu->options[i].rect->y + optionMenu->options[i].rect->h) {
 				cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
-				optionList[i].hovered = true;
+				optionMenu->options[i].hovered = true;
 			}
-			else optionList[i].hovered = false;
+			else optionMenu->options[i].hovered = false;
 		}
 	}
 
 	if (selectedItem == nullptr) {
 		if (keyboard[SDLK_a] || keyboard[SDLK_LEFT]) {
-			printf("Moving Left\n");
+			//printf("Moving Left\n");
 			camX += tileSize;
 		}
 		if (keyboard[SDLK_d] || keyboard[SDLK_RIGHT]) {
-			printf("Moving Right\n");
+			//printf("Moving Right\n");
 			camX -= tileSize;
 		}
 		if (keyboard[SDLK_w] || keyboard[SDLK_UP]) {
-			printf("Moving Up\n");
+			//printf("Moving Up\n");
 			camY += tileSize;
 		}
 		if (keyboard[SDLK_s] || keyboard[SDLK_DOWN]) {
-			printf("Moving Down\n");
+			//printf("Moving Down\n");
 			camY -= tileSize;
 		}
 	
@@ -197,12 +173,16 @@ void App::onLoop()
 	}
 	
 	if (mouse[SDL_BUTTON_LEFT]) {
-		printf("Left Mouse Clicked\n");
-		for (int i = 0; i < optionList.size(); i++) {
-			if (optionList[i].editable && optionList[i].hovered) {
-				selectedItem = &optionList[i];
-				selectedItem->selected = true;
-				break;
+		//printf("Left Mouse Clicked\n");
+
+		for (int i = 0; i < optionMenu->options.size(); i++) {
+			if (optionMenu->options[i].type == TextInput || optionMenu->options[i].type == NumberInput) {
+				if (optionMenu->options[i].hovered) {
+					//if (selectedItem != nullptr) selectedItem->selected = false;
+					selectedItem = &optionMenu->options[i];
+					selectedItem->selected = true;
+					break;
+				}
 			}
 			else {
 				if (selectedItem != nullptr) {
@@ -225,9 +205,9 @@ void App::onLoop()
 			}
 		}
 
-		if (selectedItem != nullptr) printf(selectedItem->text.c_str());
-		else printf("Nothing");
-		printf("\n");
+		//if (selectedItem != nullptr) printf(selectedItem->text.c_str());
+		//else printf("Nothing");
+		//printf("\n");
 
 		if (mouseX < SCREEN_WIDTH) {
 			for (int x = 0; x < currentZone->zoneWidth; x++) {
@@ -248,12 +228,12 @@ void App::onLoop()
 		if (mouseX > 0 && mouseX < SCREEN_WIDTH
 			&& mouseY > 0 && mouseY < SCREEN_HEIGHT) {
 			cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
-			printf("Right Mouse Held\n");
+			//printf("Right Mouse Held\n");
 			camX += tileSize * movementX * 2;
 			camY += tileSize * movementY * 2;
 		}
 		else {
-			printf("Right Mouse Clicked\n");
+			//printf("Right Mouse Clicked\n");
 			mouse[SDL_BUTTON_RIGHT] = false;
 		}
 	}
@@ -310,30 +290,29 @@ void App::onRender()
 
 	currentZone->renderZone(camX, camY, tileSize);
 
-
-	renderFilledRect(renderer, SCREEN_WIDTH, 0, OPTIONS_WIDTH, SCREEN_HEIGHT, currentZone->backgroundColor);
-	renderRect(renderer, SCREEN_WIDTH, 0, OPTIONS_WIDTH, SCREEN_HEIGHT, { 0, 0, 0, 120 });
+	gameRenderer->renderFilledRect({ SCREEN_WIDTH, 0, OPTIONS_WIDTH, SCREEN_HEIGHT }, currentZone->backgroundColor);
+	gameRenderer->renderRect({ SCREEN_WIDTH, 0, OPTIONS_WIDTH, SCREEN_HEIGHT }, { 0, 0, 0, 120 });
 	currentZone->renderTileSet();
 
-	for (OptionItem option : optionList) {
+	for (OptionItem option : optionMenu->options) {
 		option.render();
 	}
 
 	int* activeTilePos = getActiveTilePos(activeTile, tileScreenSize);
-	renderRect(renderer, activeTilePos[0], activeTilePos[1], tileScreenSize, tileScreenSize, {255, 255, 255 ,255});
+	gameRenderer->renderRect({ (float)activeTilePos[0], (float)activeTilePos[1], (float)tileScreenSize, (float)tileScreenSize }, { 255, 255, 255 ,255 });
 
 	for (int x = SCREEN_WIDTH + 20; x < SCREEN_WIDTH + OPTIONS_WIDTH - 40; x += tileScreenSize) {
 		// For width of tile set on screen, step up by size of one tile
 		for (int y = 20; y < OPTIONS_WIDTH - 40; y += tileScreenSize) {
 			if (mouseX >= x && mouseX < x + tileScreenSize
 				&& mouseY >= y && mouseY < y + tileScreenSize) {
-				renderFilledRect(renderer, x, y, tileScreenSize, tileScreenSize, { 255, 255, 255 ,120 });
+				gameRenderer->renderFilledRect({ (float)x, (float)y, (float)tileScreenSize, (float)tileScreenSize }, { 255, 255, 255 ,120 });
 			}
 		}
 	}
 
-	printf(std::to_string(activeTile).c_str());
-	printf("\n");
+	//printf(std::to_string(activeTile).c_str());
+	//printf("\n");
 
 	SDL_RenderPresent(renderer);
 }
@@ -344,6 +323,7 @@ void App::onCleanup()
 
 	SDL_DestroyTexture(currentTileSet);
 	SDL_DestroyRenderer(renderer);
+
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 }

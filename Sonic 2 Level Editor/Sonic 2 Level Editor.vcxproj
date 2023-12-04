@@ -130,16 +130,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="Button.cpp" />
     <ClCompile Include="OptionItem.cpp" />
-    <ClCompile Include="Text.cpp" />
+    <ClCompile Include="OptionMenu.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Tile.cpp" />
     <ClCompile Include="Zone.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
-    <ClInclude Include="Button.h" />
     <ClInclude Include="OptionItem.h" />
-    <ClInclude Include="Text.h" />
+    <ClInclude Include="OptionMenu.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Settings.h" />
+    <ClInclude Include="Tile.h" />
     <ClInclude Include="Zone.h" />
   </ItemGroup>
   <ItemGroup>

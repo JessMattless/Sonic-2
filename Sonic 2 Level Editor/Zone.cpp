@@ -47,9 +47,9 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 		if (flipped) tileType -= 400;
 
 		if (i == zoneWidth + 10) {
-			printf("Tile: ");
-			printf(std::to_string(tileType).c_str());
-			printf("\n");
+			//printf("Tile: ");
+			//printf(std::to_string(tileType).c_str());
+			//printf("\n");
 		}
 
 

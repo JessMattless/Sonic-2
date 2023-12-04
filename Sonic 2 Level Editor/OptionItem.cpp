@@ -1,78 +1,96 @@
 #include "OptionItem.h"
 #include <iostream>
 
-OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, std::string name, std::string text, float x, float y, int width, bool hoverable, bool editable, bool numbersOnly)
+/* If color is excluded, then the default is black. Alpha is ignored in the color.
+If -1 is given as the rect width/height then the text width/height is used.
+The X coordinate given to the rect is in relation to the option window.
+*/
+OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::string name, 
+	std::string bodyText, SDL_FRect* rect, SDL_Color color)
 {
-	this->name = name;
-	this->text = text;
-	this->x = x;
-	this->y = y;
-	this->width = width;
-	this->height = 0;
-	this->hoverable = hoverable;
-	this->hovered = false;
-	if (this->hoverable) this->editable = editable;
-	else this->editable = false;
-	this->numbersOnly = numbersOnly;
-
 	this->renderer = renderer;
 	this->font = font;
 
+	this->type = type;
+
+	this->name = name;
+	this->text = bodyText;
+
+	this->rect = rect;
+	this->color = color;
+
+	this->rect->x += SCREEN_WIDTH;
+
+	// Below is math for centering text
+	calculateTextSize();
+
+	if (this->rect->w < 0) this->rect->w = textSize[0] + (MENU_PADDING * 2);
+	if (this->rect->h < 0) this->rect->h = textSize[1];
+
+	this->textRect = new SDL_FRect(*rect);
+	textRect->x +=  MENU_PADDING;
+
+
 	updateText();
 
-	if (this->width == 0) this->width = textWidth + 30;
+	std::cout << rect->x << " | " << rect->y << " | " << rect->w << " | " << rect->h << std::endl;
 }
 
+// Calculate the width and height of the option text
+void OptionItem::calculateTextSize()
+{
+	TTF_SizeUTF8(font, text.c_str(), &textSize[0], &textSize[1]);
+}
+
+// Render the option item on screen
 void OptionItem::render()
 {
-	SDL_FRect rect;
-	rect.x = x + 960;
-	rect.y = y;
-	rect.w = width;
-	rect.h = height;
-
-	if (this->selected) SDL_SetRenderDrawColor(renderer, 0, 0, 0, 220);
-	else if (this->hovered && !this->selected) SDL_SetRenderDrawColor(renderer, 0, 0, 0, 190);
-	else SDL_SetRenderDrawColor(renderer, 0, 0, 0, 120);
-	//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 120);
+	if ((type == Button || type == TextInput|| type == NumberInput) && this->selected) SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 220);
+	else if ((type == Button || type == TextInput || type == NumberInput) && this->hovered) SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 190);
+	else SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 120);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderFillRect(renderer, &rect);
+	SDL_RenderFillRect(renderer, rect);
 
-	SDL_FRect textRect;
-	textRect.x = x + 960 + ((width - textWidth) / 2);
-	textRect.y = y;
-	textRect.w = textWidth;
-	textRect.h = height;
+	
 
-	SDL_RenderTexture(renderer, message, NULL, &textRect);
+	SDL_RenderTexture(renderer, message, NULL, textRect);
 }
 
-void OptionItem::onType(char ch, bool shift)
+void OptionItem::onType(char ch)
 {
-	if (ch == 8 && text.size() > 0) {
-		text.pop_back();
-		std::cout << "backspace" << std::endl;
-	}
-	else if ((ch >= 48 && ch <= 57)) { // Numbers
-		std::cout << ch << std::endl;
-		text.push_back(ch);
-	}
-	else if (!numbersOnly && ch == 32) { // Space
-		text.push_back(' ');
-		std::cout << "space" << std::endl;
-	}
-	else if (!numbersOnly && ((ch >= 97 && ch <= 122))) {
-		std::cout << ch << std::endl;
-		if(shift) text.push_back(ch - 32);
-		else text.push_back(ch);
-	}
+	if (type == TextInput || type == NumberInput) {
+		// Backspace
+		if (ch == 8 && text.size() > 0) {
+			text.pop_back();
+			std::cout << "backspace" << std::endl;
+		}
+		// Numbers
+		else if ((ch >= 48 && ch <= 57)) {
+			std::cout << ch << std::endl;
+			text.push_back(ch);
+		}
+		// Space
+		else if (type != NumberInput && ch == 32) {
+			text.push_back(' ');
+			std::cout << "space" << std::endl;
+		}
+		// Lowercase/Uppercase
+		else if (type != NumberInput && ((ch >= 97 && ch <= 122))) {
+			std::cout << ch << std::endl;
+			if (SDL_GetModState() & SDL_KMOD_SHIFT) text.push_back(ch - 32);
+			else text.push_back(ch);
+		}
 
-	updateText();
+		updateText();
+	}
 }
 
+// Update text size/length/position
 void OptionItem::updateText()
 {
-	TTF_SizeUTF8(font, text.c_str(), &textWidth, &height);
-	surface = TTF_RenderUTF8_Solid(font, text.c_str(), { 255, 255, 255, 255 });
+	calculateTextSize();
+	textRect->w = textSize[0];
+	textRect->h = textSize[1];
+	surface = TTF_RenderUTF8_Blended(font, text.c_str(), { 255, 255, 255, 255 });
 	message = SDL_CreateTextureFromSurface(renderer, surface);
 }
