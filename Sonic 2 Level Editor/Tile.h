@@ -6,6 +6,7 @@ struct Tile
 	int palette;
 	int tileMapIndex;
 
-	Tile(char tileInput);
+	Tile();
+	Tile(bool foreground, bool flipH, bool flipV, int palette, int tileMapIndex);
 };
 

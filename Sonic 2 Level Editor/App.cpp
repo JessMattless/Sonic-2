@@ -231,7 +231,7 @@ void App::onLoop()
 					int yPos = (y * tileSize) + camY;
 					if (mouseX >= xPos && mouseX < xPos + tileSize
 						&& mouseY >= yPos && mouseY < yPos + tileSize) {
-						currentZone->mapSet[x + (y * currentZone->zoneWidth)] = activeTile;
+						currentZone->mapSet[x + (y * currentZone->zoneWidth)].tileMapIndex = activeTile;
 					}
 				}
 			}
@@ -265,13 +265,9 @@ void App::onLoop()
 					if (mouseX >= xPos && mouseX < xPos + tileSize
 						&& mouseY >= yPos && mouseY < yPos + tileSize) {
 						int currentPos = x + (y * currentZone->zoneWidth);
-						if (currentZone->mapSet[currentPos] == 0) break;
-						else if (currentZone->mapSet[currentPos] < 400) {
-							currentZone->mapSet[currentPos] += 400;
-							goto endCheck;
-						}
+						if (currentZone->mapSet[currentPos].tileMapIndex == 0) break;
 						else {
-							currentZone->mapSet[currentPos] -= 400;
+							currentZone->mapSet[currentPos].flipH = !currentZone->mapSet[currentPos].flipH;
 							goto endCheck;
 						}
 					}
