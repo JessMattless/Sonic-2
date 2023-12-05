@@ -231,16 +231,45 @@ void App::onLoop()
 					int yPos = (y * tileSize) + camY;
 					if (mouseX >= xPos && mouseX < xPos + tileSize
 						&& mouseY >= yPos && mouseY < yPos + tileSize) {
-						currentZone->mapSet[x + (y * currentZone->zoneWidth)].tileMapIndex = activeTile;
+						Tile* currentTile = &currentZone->mapSet[x + (y * currentZone->zoneWidth)];
+						currentTile->tileMapIndex = activeTile;
+
+						if (SDL_GetModState() & SDL_KMOD_LSHIFT) currentTile->flipH = !currentTile->flipH;
+						if (SDL_GetModState() & SDL_KMOD_LCTRL) currentTile->flipV = !currentTile->flipV;
+
+						goto endL;
 					}
 				}
 			}
 		}
 
 		// If mouse is being held in the main screen, and is moved to the menu, unclick the mouse
-		if (mouseX > SCREEN_WIDTH) mouse[SDL_BUTTON_LEFT] = false;
+		endL:
+		mouse[SDL_BUTTON_LEFT] = false;
 	}
 	if (mouse[SDL_BUTTON_RIGHT]) {
+		// If the mouse is clicked outside of the option menu, remove a tile at the selected area.
+		if (mouseX < SCREEN_WIDTH) {
+			for (int x = 0; x < currentZone->zoneWidth; x++) {
+				for (int y = 0; y < currentZone->zoneHeight; y++) {
+					int xPos = (x * tileSize) + camX;
+					int yPos = (y * tileSize) + camY;
+					if (mouseX >= xPos && mouseX < xPos + tileSize
+						&& mouseY >= yPos && mouseY < yPos + tileSize) {
+						Tile* currentTile = &currentZone->mapSet[x + (y * currentZone->zoneWidth)];
+						currentTile->tileMapIndex = 0;
+
+						goto endR;
+					}
+				}
+			}
+		}
+
+		// If mouse is being held in the main screen, and is moved to the menu, unclick the mouse
+		endR:
+		mouse[SDL_BUTTON_RIGHT] = false;
+	}
+	if (mouse[SDL_BUTTON_MIDDLE]) {
 		// if the mouse is within the bounds of the editor (not including options)
 		// then move the camera by the amount dragged by the mouse.
 		if (mouseX > 0 && mouseX < SCREEN_WIDTH
@@ -249,33 +278,6 @@ void App::onLoop()
 			camX += tileSize * movementX * 2;
 			camY += tileSize * movementY * 2;
 		}
-		// If the mouse is in the options menu, unclick the mouse.
-		else {
-			mouse[SDL_BUTTON_RIGHT] = false;
-		}
-	}
-	if (mouse[SDL_BUTTON_MIDDLE]) {
-		// If the mouse is over an existing tile in the editor, flip the tile horizontally.
-		// TODO: change the way this works so it works correctly with the planned tilemapping system.
-		if (mouseX < SCREEN_WIDTH) {
-			for (int x = 0; x < currentZone->zoneWidth; x++) {
-				for (int y = 0; y < currentZone->zoneHeight; y++) {
-					int xPos = (x * tileSize) + camX;
-					int yPos = (y * tileSize) + camY;
-					if (mouseX >= xPos && mouseX < xPos + tileSize
-						&& mouseY >= yPos && mouseY < yPos + tileSize) {
-						int currentPos = x + (y * currentZone->zoneWidth);
-						if (currentZone->mapSet[currentPos].tileMapIndex == 0) break;
-						else {
-							currentZone->mapSet[currentPos].flipH = !currentZone->mapSet[currentPos].flipH;
-							goto endCheck;
-						}
-					}
-				}
-			}
-		}
-	endCheck:
-		mouse[SDL_BUTTON_MIDDLE] = false;
 	}
 
 	// Change the cursor when hovering over the tileset in the options menu

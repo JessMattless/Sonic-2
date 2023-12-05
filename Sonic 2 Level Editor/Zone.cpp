@@ -55,11 +55,7 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 			SDL_RenderRect(renderer, &worldTile);
 		}
 		else {
-			SDL_FRect textureTile;
-			textureTile.x = (tileIndex % 20) * 16;
-			textureTile.y = (tileIndex / 20) * 16;
-			textureTile.w = 16;
-			textureTile.h = 16;
+			SDL_FRect textureTile{ (tileIndex % 20) * TILE_SIZE, (tileIndex / 20) * TILE_SIZE, TILE_SIZE, TILE_SIZE };
 
 			int flip = SDL_FLIP_NONE;
 			if (mapSet[i].flipH && mapSet[i].flipV) flip = SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL;
@@ -69,43 +65,14 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 			SDL_RenderTextureRotated(renderer, tileSet, &textureTile, &worldTile, 0.0, NULL, (SDL_RendererFlip)flip);
 		}
 	}
-	//for (int i = 0; i < mapSet.size(); i++) {
-	//	int tileType = mapSet[i].tileMapIndex;
-	//	bool flipped = tileType > 400 ? true : false;
-
-	//	if (flipped) tileType -= 400;
-
-	//	int xPos = (i % zoneWidth) * tileSize + camX;
-	//	int yPos = (i / zoneWidth) * tileSize + camY;
-
-	//	SDL_FRect worldTile;
-	//	worldTile.x = xPos;
-	//	worldTile.y = yPos;
-	//	worldTile.w = tileSize;
-	//	worldTile.h = tileSize;
-
-	//	if (tileType == 0) {
-	//		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
-	//		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	//		SDL_RenderRect(renderer, &worldTile);
-	//	}
-	//	else {
-	//		SDL_FRect textureTile;
-	//		textureTile.x = (tileType % 20) * 16;
-	//		textureTile.y = (tileType / 20) * 16;
-	//		textureTile.w = 16;
-	//		textureTile.h = 16;
-
-	//		if (flipped) SDL_RenderTextureRotated(renderer, tileSet, &textureTile, &worldTile, 0.0, NULL, SDL_FLIP_HORIZONTAL);
-	//		else SDL_RenderTexture(renderer, tileSet, &textureTile, &worldTile);
-	//	}
-	//}
 }
 
+// Save the zone under /Zones/XXN.zone:
+// X: First letter of each word in zone
+// N: Act number
 void Zone::saveZone()
 {
-	//std::string fileName = "../Zones/";
-	std::string fileName = "C:/Coding_Projects/Sonic 2/Zones/";
+	std::string fileName = "../Zones/";
 
 	std::istringstream iss(zoneName);
 	std::string word;
