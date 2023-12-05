@@ -10,6 +10,7 @@ Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color ba
 	SDL_SetSurfaceColorKey(tileSetSurface, SDL_TRUE, colorKey);
 
 	this->renderer = renderer;
+	this->tileSetPath = tileSetPath;
 	this->zoneName = zoneName;
 	this->actNo = actNo;
 	this->backgroundColor = background;
@@ -71,4 +72,34 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 			else SDL_RenderTexture(renderer, tileSet, &textureTile, &worldTile);
 		}
 	}
+}
+
+void Zone::saveZone()
+{
+	//std::string fileName = "../Zones/";
+	std::string fileName = "C:/Coding_Projects/Sonic 2/Zones/";
+
+	std::istringstream iss(zoneName);
+	std::string word;
+	while (std::getline(iss, word, ' ')) {
+		fileName += toupper(word[0]);
+	}
+
+	fileName += std::to_string(actNo) + ".zone";
+
+	//std::replace(fileName.begin(), fileName.end(), ' ', '_');
+	printf(fileName.c_str());
+
+	std::ofstream ZoneFile(fileName, std::ofstream::trunc);
+	ZoneFile << "Zone Name: " + zoneName + "\n";
+	ZoneFile << "Act Number: " + std::to_string(actNo) + "\n";
+	ZoneFile << "Sprite Set: " + tileSetPath + "\n";
+	for (int y = 0; y < zoneHeight; y++) {
+		for (int x = 0; x < zoneWidth; x++) {
+			ZoneFile << "0x0000 ";
+		}
+		ZoneFile << "\n";
+	}
+
+	ZoneFile.close();
 }

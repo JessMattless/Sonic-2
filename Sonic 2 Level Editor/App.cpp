@@ -4,11 +4,11 @@
 
 // Handle input to the custom textboxes
 void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) {
-	if (selectedItem->name == "zoneName") {
+	if (selectedItem->name == "ZoneName") {
 		if (save) currentZone->zoneName = selectedItem->text;
 		else selectedItem->text = currentZone->zoneName;
 	}
-	else if (selectedItem->name == "actNo") {
+	else if (selectedItem->name == "ActNo") {
 		if (save) {
 			selectedItem->text.erase(0, selectedItem->text.find_first_not_of('0'));
 			if (selectedItem->text.size() == 0 || selectedItem->text == "0") selectedItem->text = "1";
@@ -178,7 +178,7 @@ void App::onLoop()
 				if (result == 1) loadDefaultZone();
 			}
 			else if (selectedItem->name == "SaveButton") {
-				//selectedItem->returnToDefault();
+				currentZone->saveZone();
 			}
 			else if (selectedItem->name == "LoadButton") {
 				//selectedItem->returnToDefault();
@@ -351,7 +351,7 @@ void App::onCleanup()
 
 void App::loadDefaultZone()
 {
-	currentZone = new Zone(renderer, "Zone name", 1, { 0, 34, 204, 255 }, "Emerald_Hill.png");
+	currentZone = new Zone(renderer, "Zone Name", 1, { 0, 34, 204, 255 }, "Emerald_Hill.png");
 	currentTileSet = currentZone->tileSet;
 	for (int i = 0; i < optionMenu->options.size(); i++) {
 		if (optionMenu->options[i].name == "ZoneName") optionMenu->options[i].text = currentZone->zoneName;
