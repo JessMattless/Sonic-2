@@ -6,7 +6,7 @@ If -1 is given as the rect width/height then the text width/height is used.
 The X coordinate given to the rect is in relation to the option window.
 */
 OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::string name, 
-	std::string bodyText, SDL_FRect* rect, SDL_Color color)
+	std::string bodyText, SDL_Rect* rect, SDL_Color color)
 {
 	this->renderer = renderer;
 	this->font = font;
@@ -28,7 +28,7 @@ OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::s
 	if (this->rect->w < 0) this->rect->w = textSize[0] + (MENU_PADDING * 2);
 	if (this->rect->h < 0) this->rect->h = textSize[1];
 
-	this->textRect = new SDL_FRect(*rect);
+	this->textRect = new SDL_Rect(*rect);
 	textRect->x +=  MENU_PADDING;
 
 
@@ -51,8 +51,8 @@ void OptionItem::render()
 	SDL_RenderFillRect(renderer, rect);
 
 	
-
-	SDL_RenderTexture(renderer, message, NULL, textRect);
+	SDL_RenderCopy(renderer, message, NULL, textRect);
+	//SDL_RenderTexture(renderer, message, NULL, textRect);
 }
 
 void OptionItem::onType(char ch)
@@ -72,7 +72,7 @@ void OptionItem::onType(char ch)
 		}
 		// Lowercase/Uppercase
 		else if (type != NumberInput && ((ch >= 97 && ch <= 122))) {
-			if (SDL_GetModState() & SDL_KMOD_SHIFT) text.push_back(ch - 32);
+			if (SDL_GetModState() & KMOD_SHIFT) text.push_back(ch - 32);
 			else text.push_back(ch);
 		}
 

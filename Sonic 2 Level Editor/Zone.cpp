@@ -1,5 +1,5 @@
 #include "Zone.h"
-#include <SDL3/SDL_image.h>
+#include <SDL_image.h>
 #include "App.h"
 
 Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color background, std::string tileSetPath, int width, int height)
@@ -7,7 +7,7 @@ Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color ba
 	std::string zonePath = "../Zone Tilesets/" + tileSetPath;
 	SDL_Surface* tileSetSurface = IMG_Load(zonePath.c_str());
 	Uint32 colorKey = SDL_MapRGB(tileSetSurface->format, ALPHA_KEY);
-	SDL_SetSurfaceColorKey(tileSetSurface, SDL_TRUE, colorKey);
+	SDL_SetColorKey(tileSetSurface, SDL_TRUE, colorKey);
 
 	this->renderer = renderer;
 	this->tileSetPath = tileSetPath;
@@ -28,7 +28,7 @@ Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color ba
 
 void Zone::renderTileSet()
 {
-	SDL_FRect textureRect;
+	SDL_Rect textureRect;
 	textureRect.x = SCREEN_WIDTH + 20;
 	textureRect.y = 20;
 	textureRect.w = OPTIONS_WIDTH - 40;
@@ -36,8 +36,8 @@ void Zone::renderTileSet()
 
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 120);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderRect(renderer, &textureRect);
-	SDL_RenderTexture(renderer, tileSet, NULL, &textureRect);
+	SDL_RenderDrawRect(renderer, &textureRect);
+	SDL_RenderCopy(renderer, tileSet, NULL, &textureRect);
 }
 
 void Zone::renderZone(float camX, float camY, int tileSize) {
@@ -47,15 +47,15 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 		int xPos = (i % zoneWidth) * tileSize + camX;
 		int yPos = (i / zoneWidth) * tileSize + camY;
 
-		SDL_FRect worldTile{xPos, yPos, tileSize, tileSize};
+		SDL_Rect worldTile{xPos, yPos, tileSize, tileSize};
 
 		if (tileIndex == 0) {
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
 			SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-			SDL_RenderRect(renderer, &worldTile);
+			SDL_RenderDrawRect(renderer, &worldTile);
 		}
 		else {
-			SDL_FRect textureTile;
+			SDL_Rect textureTile;
 			textureTile.x = (tileIndex % 20) * 16;
 			textureTile.y = (tileIndex / 20) * 16;
 			textureTile.w = 16;
@@ -66,7 +66,8 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 			else if (mapSet[i].flipH) flip = SDL_FLIP_HORIZONTAL;
 			else if (mapSet[i].flipV) flip = SDL_FLIP_VERTICAL;
 
-			SDL_RenderTextureRotated(renderer, tileSet, &textureTile, &worldTile, 0.0, NULL, (SDL_RendererFlip)flip);
+			SDL_RenderCopyEx(renderer, tileSet, &textureTile, &worldTile, 0.0, NULL, (SDL_RendererFlip)flip);
+			
 		}
 	}
 	//for (int i = 0; i < mapSet.size(); i++) {
@@ -105,7 +106,8 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 void Zone::saveZone()
 {
 	//std::string fileName = "../Zones/";
-	std::string fileName = "C:/Coding_Projects/Sonic 2/Zones/";
+	//TODO: Get below filename to work like above file name.
+	std::string fileName = "C:/Dev/Sonic-2/Zones/";
 
 	std::istringstream iss(zoneName);
 	std::string word;

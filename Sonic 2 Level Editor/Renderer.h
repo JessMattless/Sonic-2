@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include <SDL.h>
 
 struct Renderer
 {
@@ -10,7 +10,7 @@ private:
 public:
 	Renderer(SDL_Renderer* renderer);
 
-	void renderRect(SDL_FRect rect, SDL_Color color);
-	void renderFilledRect(SDL_FRect rect, SDL_Color color);
+	void renderRect(SDL_Rect rect, SDL_Color color);
+	void renderFilledRect(SDL_Rect rect, SDL_Color color);
 };
 

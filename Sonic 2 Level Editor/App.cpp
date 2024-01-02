@@ -1,5 +1,6 @@
 #include "App.h"
-#include <SDL3/SDL_image.h>
+//#include <SDL3/SDL_image.h>
+#include <SDL_image.h>
 #include <cmath>
 
 // Handle input to the custom textboxes
@@ -37,7 +38,7 @@ App::App()
 	_running = true;
 
 	SDL_Init(SDL_INIT_VIDEO);
-	window = SDL_CreateWindow("Sonic 2 Level Editor", (SCREEN_WIDTH + OPTIONS_WIDTH), SCREEN_HEIGHT, 0);
+	window = SDL_CreateWindow("Sonic 2 Level Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (SCREEN_WIDTH + OPTIONS_WIDTH), SCREEN_HEIGHT, 0);
 	renderer = SDL_CreateRenderer(window, NULL, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -89,29 +90,29 @@ int App::onExecute()
 void App::onEvent(SDL_Event* event)
 {
 	switch (event->type) {
-	case SDL_EVENT_QUIT:
+	case SDL_QUIT:
 		_running = false;
 		break;
-	case SDL_EVENT_KEY_DOWN:
+	case SDL_KEYDOWN:
 		keyboard[event->key.keysym.sym] = true;
 		if (selectedItem != nullptr) selectedItem->onType(event->key.keysym.sym);
 		break;
-	case SDL_EVENT_KEY_UP:
+	case SDL_KEYUP:
 		keyboard[event->key.keysym.sym] = false;
 		break;
-	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+	case SDL_MOUSEBUTTONDOWN:
 		mouse[event->button.button] = true;
 		break;
-	case SDL_EVENT_MOUSE_BUTTON_UP:
+	case SDL_MOUSEBUTTONUP:
 		mouse[event->button.button] = false;
 		break;
-	case SDL_EVENT_MOUSE_MOTION:
+	case SDL_MOUSEMOTION:
 		mouseX = event->motion.x;
 		mouseY = event->motion.y;
 		movementX = event->motion.xrel;
 		movementY = event->motion.yrel;
 		break;
-	case SDL_EVENT_MOUSE_WHEEL:
+	case SDL_MOUSEWHEEL:
 		mouseWheel = event->wheel.y;
 		break;
 	}
@@ -319,14 +320,14 @@ void App::onRender()
 
 	// Render a rect over the selected tile to give indication it is selected.
 	int* activeTilePos = getActiveTilePos(activeTile, tileScreenSize);
-	gameRenderer->renderRect({ (float)activeTilePos[0], (float)activeTilePos[1], (float)tileScreenSize, (float)tileScreenSize }, { 255, 255, 255 ,255 });
+	gameRenderer->renderRect({ activeTilePos[0], activeTilePos[1], tileScreenSize, tileScreenSize }, { 255, 255, 255 ,255 });
 
 	// when hovering over a tile in the options menu, highlight it.
 	for (int x = SCREEN_WIDTH + 20; x < SCREEN_WIDTH + OPTIONS_WIDTH - 40; x += tileScreenSize) {
 		for (int y = 20; y < OPTIONS_WIDTH - 40; y += tileScreenSize) {
 			if (mouseX >= x && mouseX < x + tileScreenSize
 				&& mouseY >= y && mouseY < y + tileScreenSize) {
-				gameRenderer->renderFilledRect({ (float)x, (float)y, (float)tileScreenSize, (float)tileScreenSize }, { 255, 255, 255 ,120 });
+				gameRenderer->renderFilledRect({ x, y, tileScreenSize, tileScreenSize }, { 255, 255, 255 ,120 });
 			}
 		}
 	}
