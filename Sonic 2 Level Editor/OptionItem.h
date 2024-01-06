@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_ttf.h>
 
 #include "Settings.h"
 
@@ -11,7 +11,7 @@ struct OptionItem
 {
 private:
 	int textSize[2];
-	SDL_FRect* textRect;
+	SDL_Rect* textRect;
 
 	SDL_Surface* surface = nullptr;
 	SDL_Texture* message = nullptr;
@@ -21,7 +21,7 @@ private:
 
 	std::string defaultText;
 public:
-	SDL_FRect* rect;
+	SDL_Rect* rect;
 	bool hovered = false;
 	bool selected = false;
 
@@ -29,7 +29,7 @@ public:
 	std::string name, text;
 	SDL_Color color;
 
-	OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::string name, std::string bodyText, SDL_FRect* rect, SDL_Color color = { 0, 0, 0 });
+	OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::string name, std::string bodyText, SDL_Rect* rect, SDL_Color color = { 0, 0, 0 });
 	void calculateTextSize();
 	void render();
 	void onType(char ch);

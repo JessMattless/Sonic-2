@@ -1,8 +1,8 @@
 #pragma once
 
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_ttf.h>
-#include <SDL3/SDL_image.h>
+#include <SDL.h>
+#include <SDL_ttf.h>
+#include <SDL_image.h>
 #include <map>
 #include <vector>
 #include "Settings.h"

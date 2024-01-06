@@ -22,12 +22,12 @@ void OptionMenu::addMenuItem(Type type, std::string itemName, std::string itemTe
 	}
 
 	if (labelText != "") {
-		this->options.push_back(OptionItem(renderer, font, Label, itemName + "Label", labelText, new SDL_FRect{ MENU_PADDING, (float)itemY, -1, -1 }));
+		this->options.push_back(OptionItem(renderer, font, Label, itemName + "Label", labelText, new SDL_Rect{ MENU_PADDING, itemY, -1, -1 }));
 
-		this->options.push_back(OptionItem(renderer, font, type, itemName, itemText, new SDL_FRect{ itemX + options.back().rect->w, (float)itemY, OPTIONS_WIDTH - (MENU_PADDING * 2) - options.back().rect->w, -1 }));
+		this->options.push_back(OptionItem(renderer, font, type, itemName, itemText, new SDL_Rect{ itemX + options.back().rect->w, itemY, OPTIONS_WIDTH - (MENU_PADDING * 2) - options.back().rect->w, -1 }));
 	}
 	else {
-		this->options.push_back(OptionItem(renderer, font, type, itemName, itemText, new SDL_FRect{ (float)itemX, (float)itemY, -1, -1 }));
+		this->options.push_back(OptionItem(renderer, font, type, itemName, itemText, new SDL_Rect{ itemX, itemY, -1, -1 }));
 	}
 
 	
