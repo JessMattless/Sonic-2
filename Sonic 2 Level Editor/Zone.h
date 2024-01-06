@@ -6,7 +6,9 @@
 #include <algorithm>
 #include <sstream>
 #include <cctype>
+
 #include "Tile.h"
+#include "Settings.h"
 
 #define ALPHA_KEY 203, 0, 212
 

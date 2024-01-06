@@ -1,12 +1,13 @@
-#include "OptionItem.h"
 #include <iostream>
+
+#include "OptionItem.h"
 
 /* If color is excluded, then the default is black. Alpha is ignored in the color.
 If -1 is given as the rect width/height then the text width/height is used.
 The X coordinate given to the rect is in relation to the option window.
 */
 OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::string name, 
-	std::string bodyText, SDL_Rect* rect, SDL_Color color)
+	std::string bodyText, SDL_Rect* rect, bool inLine, SDL_Color color)
 {
 	this->renderer = renderer;
 	this->font = font;
@@ -19,17 +20,18 @@ OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::s
 
 	this->rect = rect;
 	this->color = color;
+	this->inLine = inLine;
 
-	this->rect->x += SCREEN_WIDTH;
+	this->rect->x += settings.SCREEN_WIDTH;
 
 	// Below is math for centering text
 	calculateTextSize();
 
-	if (this->rect->w < 0) this->rect->w = textSize[0] + (MENU_PADDING * 2);
+	if (this->rect->w < 0) this->rect->w = textSize[0] + (settings.MENU_PADDING * 2);
 	if (this->rect->h < 0) this->rect->h = textSize[1];
 
 	this->textRect = new SDL_Rect(*rect);
-	textRect->x +=  MENU_PADDING;
+	textRect->x += settings.MENU_PADDING;
 
 
 	updateText();
@@ -43,7 +45,7 @@ void OptionItem::calculateTextSize()
 
 // Render the option item on screen
 void OptionItem::render()
-{
+{	
 	if ((type == Button || type == TextInput|| type == NumberInput) && this->selected) SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 220);
 	else if ((type == Button || type == TextInput || type == NumberInput) && this->hovered) SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 190);
 	else SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 120);
@@ -83,8 +85,17 @@ void OptionItem::onType(char ch)
 void OptionItem::updateSize()
 {
 	updateText();
-	this->rect->w = textSize[0] + (MENU_PADDING * 2);
-	this->rect->h = textSize[1];
+	//if (!inlineWithPrev) {
+	//	for (OptionItem item : options) {
+	//		if (item.rect->y >= itemY) itemY = item.rect->y + 50;
+	//	}
+	//}
+	//else {
+	//	itemX = options.back().rect->x + options.back().rect->w + 20 - settings.SCREEN_WIDTH;
+	//	itemY = options.back().rect->y;
+	//}
+	//this->rect->w = textSize[0] + (settings.MENU_PADDING * 2);
+	//this->rect->h = textSize[1];
 }
 
 // Update text size/length/position

@@ -24,12 +24,13 @@ public:
 	SDL_Rect* rect;
 	bool hovered = false;
 	bool selected = false;
+	bool inLine = false;
 
 	Type type;
 	std::string name, text;
 	SDL_Color color;
 
-	OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::string name, std::string bodyText, SDL_Rect* rect, SDL_Color color = { 0, 0, 0 });
+	OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::string name, std::string bodyText, SDL_Rect* rect, bool inLine, SDL_Color color = { 0, 0, 0 });
 	void calculateTextSize();
 	void render();
 	void onType(char ch);

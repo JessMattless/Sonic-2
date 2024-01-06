@@ -22,8 +22,8 @@ private:
 
 	Renderer* gameRenderer;
 	OptionMenu* optionMenu;
-
-	int tileScreenSize = 22;
+	
+	int tileScreenSize = 0;
 	int activeTile = 0;
 
 	float camX, camY;
@@ -42,6 +42,17 @@ private:
 	SDL_Texture* currentTileSet;
 
 public:
+	//static int WINDOW_WIDTH;// 1200;
+	//static int WINDOW_HEIGHT;// 800;
+	//static int OPTIONS_WIDTH;// (WINDOW_WIDTH / 3) > 500 ? WINDOW_WIDTH / 3 : 500; // A third of the window width, or max of 500
+	//static int SCREEN_WIDTH;// WINDOW_WIDTH - OPTIONS_WIDTH; // Whatever part of the screen the options window does not fill
+	//static const int TILE_SIZE = 16;
+	//static const int MENU_PADDING = 20;
+
+	//static void setScreenSizes(int windowWidth, int windowHeight);
+
+	//static Settings* settings;// = new Settings(1200, 700);
+
 	App(); // Used as our init function
 
 	int onExecute();
@@ -55,4 +66,9 @@ public:
 	void onCleanup();
 
 	void loadDefaultZone();
+
+	//static void setSettings(int windowWidgth, int windowHeight);
+	//static Settings* getSettings();
+
+	//int resizeWindow(void* data, SDL_Event* event);
 };

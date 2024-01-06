@@ -1,6 +1,7 @@
-#include "Zone.h"
 #include <SDL_image.h>
-#include "App.h"
+
+#include "Zone.h"
+#include "Settings.h"
 
 Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color background, std::string tileSetPath, int width, int height)
 {
@@ -16,11 +17,12 @@ Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color ba
 	this->backgroundColor = background;
 	this->tileSet = SDL_CreateTextureFromSurface(renderer, tileSetSurface);
 
-
-	if (width >= 100) this->zoneWidth = width;
-	else this->zoneWidth = 100;
-	if (height >= 64) this->zoneHeight = height;
-	else this->zoneHeight = 64;
+	this->zoneWidth = (width >= 100) ? width : 100;
+	this->zoneHeight = (height >= 64) ? height : 100;
+	//if (width >= 100) this->zoneWidth = width;
+	//else this->zoneWidth = 100;
+	//if (height >= 64) this->zoneHeight = height;
+	//else this->zoneHeight = 64;
 
 	//this->currentMapSet.reserve(zoneWidth * zoneHeight);
 	for (int i = 0; i < zoneWidth * zoneHeight; i++) mapSet.push_back(Tile());
@@ -28,11 +30,12 @@ Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color ba
 
 void Zone::renderTileSet()
 {
-	SDL_Rect textureRect;
-	textureRect.x = SCREEN_WIDTH + 20;
-	textureRect.y = 20;
-	textureRect.w = OPTIONS_WIDTH - 40;
-	textureRect.h = OPTIONS_WIDTH - 40;
+	SDL_Rect textureRect{
+		settings.SCREEN_WIDTH + settings.MENU_PADDING,
+		settings.MENU_PADDING,
+		settings.OPTIONS_WIDTH - (settings.MENU_PADDING * 2),
+		settings.OPTIONS_WIDTH - (settings.MENU_PADDING * 2)
+	};
 
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 120);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
