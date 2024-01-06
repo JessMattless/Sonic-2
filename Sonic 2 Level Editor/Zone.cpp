@@ -83,15 +83,26 @@ void Zone::saveZone()
 	fileName += std::to_string(actNo) + ".zone";
 
 	//std::replace(fileName.begin(), fileName.end(), ' ', '_');
-	printf(fileName.c_str());
 
+	//std::ofstream ZoneFile(fileName, std::ios::binary | std::ofstream::trunc);
 	std::ofstream ZoneFile(fileName, std::ofstream::trunc);
 	ZoneFile << "Zone Name: " + zoneName + "\n";
 	ZoneFile << "Act Number: " + std::to_string(actNo) + "\n";
 	ZoneFile << "Sprite Set: " + tileSetPath + "\n";
 	for (int y = 0; y < zoneHeight; y++) {
 		for (int x = 0; x < zoneWidth; x++) {
-			ZoneFile << "0x0000 ";
+			Tile* currentTile = &mapSet[x + (y * zoneWidth)];
+
+			uint16_t tileData = 0;
+			tileData |= (currentTile->foreground << 15);
+			tileData |= (currentTile->flipH << 14);
+			tileData |= (currentTile->flipV << 13);
+			tileData |= (currentTile->palette << 11);
+			tileData |= (currentTile->tileMapIndex);
+
+			printf("0x%X ", tileData);
+
+			ZoneFile << tileData + " ";
 		}
 		ZoneFile << "\n";
 	}

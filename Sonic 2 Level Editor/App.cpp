@@ -231,11 +231,13 @@ void App::onLoop()
 					int yPos = (y * tileSize) + camY;
 					if (mouseX >= xPos && mouseX < xPos + tileSize
 						&& mouseY >= yPos && mouseY < yPos + tileSize) {
-						Tile* currentTile = &currentZone->mapSet[x + (y * currentZone->zoneWidth)];
-						currentTile->tileMapIndex = activeTile;
-
-						if (SDL_GetModState() & SDL_KMOD_LSHIFT) currentTile->flipH = !currentTile->flipH;
-						if (SDL_GetModState() & SDL_KMOD_LCTRL) currentTile->flipV = !currentTile->flipV;
+						currentZone->mapSet[x + (y * currentZone->zoneWidth)] = {
+							true, 
+							(SDL_GetModState() & SDL_KMOD_LSHIFT) ? true : false,
+							(SDL_GetModState() & SDL_KMOD_LCTRL) ? true : false,
+							0, 
+							activeTile
+						};
 
 						goto endL;
 					}
