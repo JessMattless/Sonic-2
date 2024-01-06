@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
+
 #include "OptionItem.h"
+#include "Settings.h"
 
 class OptionMenu
 {
@@ -8,6 +10,7 @@ private:
 	SDL_Color backgroundColor;
 	SDL_Renderer* renderer;
 	TTF_Font* font;
+
 public:
 	std::vector<OptionItem> options;
 	
