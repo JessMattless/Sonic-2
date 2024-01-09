@@ -18,8 +18,8 @@ Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color ba
 	this->backgroundColor = background;
 	this->tileSet = SDL_CreateTextureFromSurface(renderer, tileSetSurface);
 
-	this->zoneWidth = (width >= 100) ? width : 100;
-	this->zoneHeight = (height >= 64) ? height : 100;
+	this->zoneWidth = (width >= settings.MIN_LEVEL_WIDTH) ? width : settings.MIN_LEVEL_WIDTH;
+	this->zoneHeight = (height >= settings.MIN_LEVEL_HEIGHT) ? height : settings.MIN_LEVEL_HEIGHT;
 	//if (width >= 100) this->zoneWidth = width;
 	//else this->zoneWidth = 100;
 	//if (height >= 64) this->zoneHeight = height;

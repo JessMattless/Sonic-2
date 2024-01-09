@@ -15,6 +15,8 @@ public:
 	const int MAX_OPTIONS_WIDTH = 500;
 	const int MIN_WINDOW_WIDTH = 1200;
 	const int MIN_WINDOW_HEIGHT = 700;
+	const int MIN_LEVEL_WIDTH = 100;
+	const int MIN_LEVEL_HEIGHT = 64;
 
 	Settings(int windowWidth, int windowHeight);
 	void setScreenSizes(int windowWidth, int windowHeight);

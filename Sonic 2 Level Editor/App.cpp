@@ -21,6 +21,65 @@ void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) 
 			selectedItem->text = std::to_string(currentZone->actNo);
 		}
 	}
+	else if (selectedItem->name == "ZoneWidth") {
+		if (save) {
+			selectedItem->text.erase(0, selectedItem->text.find_first_not_of('0'));
+			if (selectedItem->text.size() == 0 || stoi(selectedItem->text) < settings.MIN_LEVEL_WIDTH) 
+				selectedItem->text = std::to_string(settings.MIN_LEVEL_WIDTH);
+
+			int difference = stoi(selectedItem->text) - currentZone->zoneWidth;
+
+			while (difference != 0) {
+				if (difference > 0) {
+					currentZone->zoneWidth = stoi(selectedItem->text) - difference + 1;
+					for (int i = currentZone->zoneWidth - 1; i <= currentZone->mapSet.size(); i += currentZone->zoneWidth) {
+						currentZone->mapSet.insert(currentZone->mapSet.begin() + i, Tile());
+					}
+					difference--;
+				}
+				else if (difference < 0) {
+					for (int i = currentZone->zoneWidth - 1; i < currentZone->mapSet.size(); i += currentZone->zoneWidth) {
+						currentZone->mapSet.erase(currentZone->mapSet.begin() + i);
+					}
+					currentZone->zoneWidth = stoi(selectedItem->text) - difference - 1;
+					difference++;
+				}
+			}
+
+
+		}
+	}
+	else if (selectedItem->name == "ZoneHeight") {
+		if (save) {
+			selectedItem->text.erase(0, selectedItem->text.find_first_not_of('0'));
+			if (selectedItem->text.size() == 0 || stoi(selectedItem->text) < settings.MIN_LEVEL_HEIGHT) 
+				selectedItem->text = std::to_string(settings.MIN_LEVEL_HEIGHT);
+
+			int difference = stoi(selectedItem->text) - currentZone->zoneHeight;
+
+			while (difference != 0) {
+				if (difference > 0) {
+					currentZone->zoneHeight = stoi(selectedItem->text) - difference + 1;
+					int iterator = currentZone->mapSet.size() + currentZone->zoneWidth;
+					for (int i = currentZone->mapSet.size(); i < iterator; i++) {
+						currentZone->mapSet.push_back(Tile());
+						//currentZone->mapSet.push_back(Tile());
+					}
+					difference--;
+				}
+				else if (difference < 0) {
+					int iterator = currentZone->mapSet.size() - currentZone->zoneWidth;
+					for (int i = currentZone->mapSet.size(); i > iterator; i--) {
+						currentZone->mapSet.pop_back();
+					}
+					currentZone->zoneHeight = stoi(selectedItem->text) - difference - 1;
+					difference++;
+				}
+			}
+
+
+		}
+	}
 
 	selectedItem->updateText();
 }
@@ -69,6 +128,8 @@ App::App()
 	
 	optionMenu->addMenuItem(TextInput, "ZoneName", currentZone->zoneName, "Zone Name:");
 	optionMenu->addMenuItem(NumberInput, "ActNo", std::to_string(currentZone->actNo), "Act Number:");
+	optionMenu->addMenuItem(NumberInput, "ZoneWidth", std::to_string(currentZone->zoneWidth), "Zone Width:");
+	optionMenu->addMenuItem(NumberInput, "ZoneHeight", std::to_string(currentZone->zoneHeight), "Zone Height:");
 	optionMenu->addMenuItem(Button, "SaveButton", "Save");
 	optionMenu->addMenuItem(Button, "LoadButton", "Load", "", true);
 	optionMenu->addMenuItem(Button, "NewButton", "New", "", true);
