@@ -65,9 +65,7 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 // N: Act number
 void Zone::saveZone()
 {
-	//std::string fileName = "../Zones/";
-	//TODO: Get below filename to work like above file name.
-	std::string fileName = "C:/Dev/Sonic-2/Zones/";
+	std::string fileName = "..\\Zones\\";
 
 	std::istringstream iss(zoneName);
 	std::string word;
@@ -95,9 +93,10 @@ void Zone::saveZone()
 			tileData |= (currentTile->palette << 11);
 			tileData |= (currentTile->tileMapIndex);
 
-			printf("0x%X ", tileData);
+			//printf("0x%X ", tileData);
 
-			ZoneFile << tileData + " ";
+			ZoneFile.write(reinterpret_cast<char*>(&tileData), sizeof(uint16_t));
+			//ZoneFile << tileData;
 		}
 		ZoneFile << "\n";
 	}

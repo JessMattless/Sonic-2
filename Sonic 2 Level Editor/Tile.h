@@ -9,5 +9,6 @@ public:
 
 	Tile();
 	Tile(bool foreground, bool flipH, bool flipV, int palette, int tileMapIndex);
+	void reset();
 };
 

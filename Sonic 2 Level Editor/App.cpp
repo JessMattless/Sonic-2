@@ -2,6 +2,8 @@
 //#include <SDL3/SDL_image.h>
 #include <SDL_image.h>
 #include <cmath>
+#include <nfd.hpp>
+#include <iostream>
 
 // Handle input to the custom textboxes
 void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) {
@@ -33,25 +35,6 @@ int* getActiveTilePos(int tile, int tileScreenSize) {
 	return pos;
 }
 
-//static int resizeWindow(void* data, SDL_Event* event) {
-//	if (event->type == SDL_WINDOWEVENT &&
-//		(event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED || event->window.event == SDL_WINDOWEVENT_RESIZED)) {
-//		//Settings* set = App::getSettings();
-//		//if (set == (Settings*)data) {
-//			settings.setScreenSizes(event->window.data1, event->window.data2);
-//		//}
-//	}
-//	return 0;
-//}
-
-//void App::setSettings(int windowWidth, int windowHeight) {
-//	settings = new Settings(windowWidth, windowHeight);
-//}
-//
-//Settings* App::getSettings() {
-//	return settings;
-//}
-
 App::App()
 {
 	_running = true;
@@ -60,6 +43,8 @@ App::App()
 
 	//setScreenSizes(1200, 700);
 	updateTileScreenSize();
+
+	NFD::Guard nfdGuard;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	window = SDL_CreateWindow("Sonic 2 Level Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, settings.getWindowWidth(), settings.getWindowHeight(), SDL_WINDOW_RESIZABLE);
@@ -234,7 +219,14 @@ void App::onLoop()
 				currentZone->saveZone();
 			}
 			else if (selectedItem->name == "LoadButton") {
-				//selectedItem->returnToDefault();
+				NFD::UniquePath outPath;
+				nfdfilteritem_t filterItem[1] = {"Zone File", "zone"};
+				nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
+				if (result == NFD_OKAY) {
+					std::cout << "Success!" << std::endl << outPath.get() << std::endl;
+
+					//Put loading stuff here
+				}
 			}
 			//TODO: sort out button inputs for individual buttons.
 			selectedItem->selected = false;
@@ -312,7 +304,7 @@ void App::onLoop()
 					if (mouseX >= xPos && mouseX < xPos + tileSize
 						&& mouseY >= yPos && mouseY < yPos + tileSize) {
 						Tile* currentTile = &currentZone->mapSet[x + (y * currentZone->zoneWidth)];
-						currentTile->tileMapIndex = 0;
+						currentTile->reset();
 
 						goto endR;
 					}

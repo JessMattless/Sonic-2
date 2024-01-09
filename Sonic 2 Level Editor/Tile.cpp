@@ -15,3 +15,11 @@ Tile::Tile(bool foreground, bool flipH, bool flipV, int palette, int tileMapInde
 	this->palette = palette;
 	this->tileMapIndex = tileMapIndex;
 }
+
+void Tile::reset() {
+	this->foreground = false;
+	this->flipH = false;
+	this->flipV = false;
+	this->palette = 0;
+	this->tileMapIndex = 0;
+}
