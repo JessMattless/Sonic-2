@@ -34,7 +34,7 @@ public:
 	void calculateTextSize();
 	void render();
 	void onType(char ch);
-	void updateSize();
+	void updatePosition(float* oldWindowSizes, float* newWindowSizes);
 	void updateText();
 	void returnToDefault();
 };

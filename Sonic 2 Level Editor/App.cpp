@@ -27,7 +27,7 @@ void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) 
 int* getActiveTilePos(int tile, int tileScreenSize) {
 	int pos[2];
 
-	pos[0] = (tile % 20) * tileScreenSize + settings.SCREEN_WIDTH + settings.MENU_PADDING;
+	pos[0] = (tile % 20) * tileScreenSize + settings.getScreenWidth() + settings.MENU_PADDING;
 	pos[1] = (tile / 20) * tileScreenSize + settings.MENU_PADDING;
 
 	return pos;
@@ -59,12 +59,12 @@ App::App()
 	//settings = new Settings(1200, 700);
 
 	//setScreenSizes(1200, 700);
-	tileScreenSize = (settings.OPTIONS_WIDTH - (settings.MENU_PADDING * 2)) / 20;
+	updateTileScreenSize();
 
 	SDL_Init(SDL_INIT_VIDEO);
-	window = SDL_CreateWindow("Sonic 2 Level Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, settings.WINDOW_WIDTH, settings.WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("Sonic 2 Level Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, settings.getWindowWidth(), settings.getWindowHeight(), SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(window, NULL, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, settings.WINDOW_WIDTH, settings.WINDOW_HEIGHT);
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, settings.getWindowWidth(), settings.getWindowHeight());
 
 	SDL_SetWindowMinimumSize(window, settings.MIN_WINDOW_WIDTH, settings.MIN_WINDOW_HEIGHT);
 	//SDL_SetEventFilter(resizeWindow, window);
@@ -144,11 +144,27 @@ void App::onEvent(SDL_Event* event)
 		break;
 	case SDL_WINDOWEVENT:
 		if (event->window.event == SDL_WINDOWEVENT_RESIZED) {
+			// Get screen sizes before updating them, and after. Used for updating the options menu
+			float oldSizes[3] = { 
+				settings.getWindowHeight(), 
+				settings.getScreenWidth(), 
+				settings.getOptionsWidth() 
+			
+			};
 			settings.setScreenSizes(event->window.data1, event->window.data2);
+
+			float newSizes[3] = { 
+				settings.getWindowHeight(), 
+				settings.getScreenWidth(), 
+				settings.getOptionsWidth() 
+			};
+
+			optionMenu->updateTileSetRect(newSizes);
 			for (OptionItem item : optionMenu->options) {
-				//item.updatePosition();
-				//item.updateSize();
+				item.updatePosition(oldSizes, newSizes);
 			}
+
+			updateTileScreenSize();
 		}
 		break;
 	}
@@ -251,7 +267,7 @@ void App::onLoop()
 		// If a tile is clicked on the tilemap within the options menu, then set it as the active drawing tile.
 		for (int x = 0; x < 20; x++) {
 			for (int y = 0; y < 20; y++) {
-				int xPos = (x * tileScreenSize) + settings.SCREEN_WIDTH + 20;
+				int xPos = (x * tileScreenSize) + settings.getScreenWidth() + 20;
 				int yPos = (y * tileScreenSize) + 20;
 				if (mouseX >= xPos && mouseX < xPos + tileScreenSize
 					&& mouseY >= yPos && mouseY < yPos + tileScreenSize) {
@@ -261,7 +277,7 @@ void App::onLoop()
 		}
 
 		// If the mouse is clicked outside of the option menu, place a tile at the selected area.
-		if (mouseX < settings.SCREEN_WIDTH) {
+		if (mouseX < settings.getScreenWidth()) {
 			for (int x = 0; x < currentZone->zoneWidth; x++) {
 				for (int y = 0; y < currentZone->zoneHeight; y++) {
 					int xPos = (x * tileSize) + camX;
@@ -288,7 +304,7 @@ void App::onLoop()
 	}
 	if (mouse[SDL_BUTTON_RIGHT]) {
 		// If the mouse is clicked outside of the option menu, remove a tile at the selected area.
-		if (mouseX < settings.SCREEN_WIDTH) {
+		if (mouseX < settings.getScreenWidth()) {
 			for (int x = 0; x < currentZone->zoneWidth; x++) {
 				for (int y = 0; y < currentZone->zoneHeight; y++) {
 					int xPos = (x * tileSize) + camX;
@@ -311,8 +327,8 @@ void App::onLoop()
 	if (mouse[SDL_BUTTON_MIDDLE]) {
 		// if the mouse is within the bounds of the editor (not including options)
 		// then move the camera by the amount dragged by the mouse.
-		if (mouseX > 0 && mouseX < settings.SCREEN_WIDTH
-			&& mouseY > 0 && mouseY < settings.WINDOW_HEIGHT) {
+		if (mouseX > 0 && mouseX < settings.getScreenWidth()
+			&& mouseY > 0 && mouseY < settings.getWindowHeight()) {
 			cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
 			camX += tileSize * movementX * 2;
 			camY += tileSize * movementY * 2;
@@ -320,19 +336,19 @@ void App::onLoop()
 	}
 
 	// Change the cursor when hovering over the tileset in the options menu
-	if (mouseX >= settings.SCREEN_WIDTH + 20 && mouseX <= settings.SCREEN_WIDTH + settings.OPTIONS_WIDTH - 20
-		&& mouseY >= 20 && mouseY <= settings.OPTIONS_WIDTH - 20) {
+	if (mouseX >= settings.getScreenWidth() + 20 && mouseX <= settings.getScreenWidth() + settings.getOptionsWidth() - 20
+		&& mouseY >= 20 && mouseY <= settings.getOptionsWidth() - 20) {
 			cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 	}
 
 	// Limit the bounds of the camera on the X and Y axis so you can't move too far from the level.
 	if (camX > tileSize * 10) camX = tileSize * 10;
-	else if (camX < -((currentZone->zoneWidth * tileSize) + (tileSize * 10) - settings.SCREEN_WIDTH))
-		camX = -((currentZone->zoneWidth * tileSize) + (tileSize * 10) - settings.SCREEN_WIDTH);
+	else if (camX < -((currentZone->zoneWidth * tileSize) + (tileSize * 10) - settings.getScreenWidth()))
+		camX = -((currentZone->zoneWidth * tileSize) + (tileSize * 10) - settings.getScreenWidth());
 
 	if (camY > tileSize * 10) camY = tileSize * 10;
-	else if (camY < -((currentZone->zoneHeight * tileSize) + (tileSize * 10) - settings.WINDOW_HEIGHT))
-		camY = -((currentZone->zoneHeight * tileSize) + (tileSize * 10) - settings.WINDOW_HEIGHT);
+	else if (camY < -((currentZone->zoneHeight * tileSize) + (tileSize * 10) - settings.getWindowHeight()))
+		camY = -((currentZone->zoneHeight * tileSize) + (tileSize * 10) - settings.getWindowHeight());
 
 	// Reset movement/zoom vectors for the next frame.
 	mouseWheel = 0; movementX = 0; movementY = 0;
@@ -349,10 +365,10 @@ void App::onRender()
 	currentZone->renderZone(camX, camY, tileSize);
 
 	// Render the options menu background/border.
-	gameRenderer->renderFilledRect({ settings.SCREEN_WIDTH, 0, settings.OPTIONS_WIDTH, settings.WINDOW_HEIGHT }, currentZone->backgroundColor);
-	gameRenderer->renderRect({ settings.SCREEN_WIDTH, 0, settings.OPTIONS_WIDTH, settings.WINDOW_HEIGHT }, { 0, 0, 0, 120 });
+	gameRenderer->renderFilledRect({ settings.getScreenWidth(), 0, settings.getOptionsWidth(), settings.getWindowHeight()}, currentZone->backgroundColor);
+	gameRenderer->renderRect({ settings.getScreenWidth(), 0, settings.getOptionsWidth(), settings.getWindowHeight()}, {0, 0, 0, 120});
 
-	currentZone->renderTileSet();
+	optionMenu->renderTileSet(currentZone->tileSet);
 
 	for (OptionItem option : optionMenu->options) {
 		option.render();
@@ -363,8 +379,8 @@ void App::onRender()
 	gameRenderer->renderRect({ activeTilePos[0], activeTilePos[1], tileScreenSize, tileScreenSize }, { 255, 255, 255 ,255 });
 
 	// when hovering over a tile in the options menu, highlight it.
-	for (int x = settings.SCREEN_WIDTH + settings.MENU_PADDING; x < settings.WINDOW_WIDTH - settings.MENU_PADDING; x += tileScreenSize) {
-		for (int y = settings.MENU_PADDING; y < settings.OPTIONS_WIDTH - settings.MENU_PADDING; y += tileScreenSize) {
+	for (int x = settings.getScreenWidth() + settings.MENU_PADDING; x < settings.getWindowWidth() - settings.MENU_PADDING; x += tileScreenSize) {
+		for (int y = settings.MENU_PADDING; y < settings.getOptionsWidth() - settings.MENU_PADDING; y += tileScreenSize) {
 			if (mouseX >= x && mouseX < x + tileScreenSize
 				&& mouseY >= y && mouseY < y + tileScreenSize) {
 				gameRenderer->renderFilledRect({ x, y, tileScreenSize, tileScreenSize }, { 255, 255, 255 ,120 });
@@ -395,6 +411,11 @@ void App::loadDefaultZone()
 		else if (optionMenu->options[i].name == "ActNo") optionMenu->options[i].text = std::to_string(currentZone->actNo);
 		optionMenu->options[i].updateText();
 	}
+}
+
+void App::updateTileScreenSize()
+{
+	tileScreenSize = (settings.getOptionsWidth() - (settings.MENU_PADDING * 2)) / 20;
 }
 
 int main(int argc, char* argv[]) {

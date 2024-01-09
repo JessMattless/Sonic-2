@@ -28,21 +28,6 @@ Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color ba
 	for (int i = 0; i < zoneWidth * zoneHeight; i++) mapSet.push_back(Tile());
 }
 
-void Zone::renderTileSet()
-{
-	SDL_Rect textureRect{
-		settings.SCREEN_WIDTH + settings.MENU_PADDING,
-		settings.MENU_PADDING,
-		settings.OPTIONS_WIDTH - (settings.MENU_PADDING * 2),
-		settings.OPTIONS_WIDTH - (settings.MENU_PADDING * 2)
-	};
-
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 120);
-	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderDrawRect(renderer, &textureRect);
-	SDL_RenderCopy(renderer, tileSet, NULL, &textureRect);
-}
-
 void Zone::renderZone(float camX, float camY, int tileSize) {
 	for (int i = 0; i < mapSet.size(); i++) {
 		int tileIndex = mapSet[i].tileMapIndex;

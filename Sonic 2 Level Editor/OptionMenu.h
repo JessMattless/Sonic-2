@@ -11,10 +11,16 @@ private:
 	SDL_Renderer* renderer;
 	TTF_Font* font;
 
+	SDL_Rect* tileSetRect;
+
 public:
 	std::vector<OptionItem> options;
 	
 	OptionMenu(SDL_Renderer* renderer, TTF_Font* font, SDL_Color background);
+
+	void updateTileSetRect(float* screenSizes);
+	void renderTileSet(SDL_Texture* tileSet);
 	void addMenuItem(Type type, std::string itemName, std::string itemText, std::string labelText = "", bool inlineWithPrev = false);
+	void updateMenu();
 };
 

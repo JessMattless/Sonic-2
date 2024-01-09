@@ -67,6 +67,8 @@ public:
 
 	void loadDefaultZone();
 
+	void updateTileScreenSize();
+
 	//static void setSettings(int windowWidgth, int windowHeight);
 	//static Settings* getSettings();
 

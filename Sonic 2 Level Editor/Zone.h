@@ -28,7 +28,6 @@ public:
 	std::vector<Tile> mapSet;
 
 	Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color background, std::string tileSetPath, int width = 100, int height = 64);
-	void renderTileSet();
 	void renderZone(float camX, float camY, int tileSize);
 	void saveZone();
 };

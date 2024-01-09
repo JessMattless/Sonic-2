@@ -12,3 +12,23 @@ void Settings::setScreenSizes(int windowWidth, int windowHeight) {
 	OPTIONS_WIDTH = (WINDOW_WIDTH / 3) < MAX_OPTIONS_WIDTH ? WINDOW_WIDTH / 3 : MAX_OPTIONS_WIDTH;
 	SCREEN_WIDTH = WINDOW_WIDTH - OPTIONS_WIDTH;
 }
+
+int Settings::getWindowWidth()
+{
+	return WINDOW_WIDTH;
+}
+
+int Settings::getWindowHeight()
+{
+	return WINDOW_HEIGHT;
+}
+
+int Settings::getOptionsWidth()
+{
+	return OPTIONS_WIDTH;
+}
+
+int Settings::getScreenWidth()
+{
+	return SCREEN_WIDTH;
+}

@@ -22,13 +22,15 @@ OptionItem::OptionItem(SDL_Renderer* renderer, TTF_Font* font, Type type, std::s
 	this->color = color;
 	this->inLine = inLine;
 
-	this->rect->x += settings.SCREEN_WIDTH;
+	this->rect->x += settings.getScreenWidth();
 
 	// Below is math for centering text
 	calculateTextSize();
 
 	if (this->rect->w < 0) this->rect->w = textSize[0] + (settings.MENU_PADDING * 2);
 	if (this->rect->h < 0) this->rect->h = textSize[1];
+
+	if (this->type == Button) this->rect->y = settings.getWindowHeight() - settings.MENU_PADDING - this->rect->h;
 
 	this->textRect = new SDL_Rect(*rect);
 	textRect->x += settings.MENU_PADDING;
@@ -82,20 +84,29 @@ void OptionItem::onType(char ch)
 	}
 }
 
-void OptionItem::updateSize()
+void OptionItem::updatePosition(float* oldWindowSizes, float* newWindowSizes)
 {
-	updateText();
-	//if (!inlineWithPrev) {
-	//	for (OptionItem item : options) {
-	//		if (item.rect->y >= itemY) itemY = item.rect->y + 50;
-	//	}
-	//}
-	//else {
-	//	itemX = options.back().rect->x + options.back().rect->w + 20 - settings.SCREEN_WIDTH;
-	//	itemY = options.back().rect->y;
-	//}
-	//this->rect->w = textSize[0] + (settings.MENU_PADDING * 2);
-	//this->rect->h = textSize[1];
+	float screenSizeDifference[] = {
+		newWindowSizes[0] - oldWindowSizes[0],
+		newWindowSizes[1] - oldWindowSizes[1],
+		newWindowSizes[2] - oldWindowSizes[2],
+	};
+
+	this->rect->x += screenSizeDifference[1];
+	this->textRect->x += screenSizeDifference[1];
+
+	if (this->type != Button) {
+		this->rect->y += screenSizeDifference[2];
+		this->textRect->y += screenSizeDifference[2];
+	}
+	else {
+		this->rect->y += screenSizeDifference[0];
+		this->textRect->y += screenSizeDifference[0];
+	}
+
+	if (this->inLine && this->type != Label && this->type != Button) {
+		this->rect->w += screenSizeDifference[2];
+	}
 }
 
 // Update text size/length/position
@@ -112,5 +123,4 @@ void OptionItem::returnToDefault()
 {
 	this->color = { 0, 0, 0 };
 	this->text = defaultText;
-	updateSize();
 }

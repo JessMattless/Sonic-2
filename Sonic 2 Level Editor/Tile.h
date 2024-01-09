@@ -1,6 +1,7 @@
 #pragma once
-struct Tile
+class Tile
 {
+public:
 	bool foreground;
 	bool flipH, flipV;
 	int palette;
