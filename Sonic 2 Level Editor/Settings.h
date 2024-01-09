@@ -1,4 +1,5 @@
 #pragma once
+#include <SDL.h>
 
 // TODO: Fix this, it needs to work for resizing the window
 static struct Settings {

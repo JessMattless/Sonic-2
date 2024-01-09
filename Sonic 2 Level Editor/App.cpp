@@ -223,9 +223,9 @@ void App::onLoop()
 				nfdfilteritem_t filterItem[1] = {"Zone File", "zone"};
 				nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
 				if (result == NFD_OKAY) {
-					std::cout << "Success!" << std::endl << outPath.get() << std::endl;
+					//std::cout << "Success!" << std::endl << outPath.get() << std::endl;
 
-					//Put loading stuff here
+					currentZone = Zone::OpenZone(renderer, outPath.get());
 				}
 			}
 			//TODO: sort out button inputs for individual buttons.
@@ -396,7 +396,7 @@ void App::onCleanup()
 
 void App::loadDefaultZone()
 {
-	currentZone = new Zone(renderer, "Zone Name", 1, { 0, 34, 204, 255 }, "Emerald_Hill.png");
+	currentZone = new Zone(renderer, "Zone Name", 1, { 23, 27, 33, 255 }, "Emerald_Hill.png");
 	currentTileSet = currentZone->tileSet;
 	for (int i = 0; i < optionMenu->options.size(); i++) {
 		if (optionMenu->options[i].name == "ZoneName") optionMenu->options[i].text = currentZone->zoneName;

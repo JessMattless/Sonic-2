@@ -2,6 +2,7 @@
 
 #include "Zone.h"
 #include "Settings.h"
+#include <iostream>
 
 Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color background, std::string tileSetPath, int width, int height)
 {
@@ -38,7 +39,7 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 		SDL_Rect worldTile{xPos, yPos, tileSize, tileSize};
 
 		if (tileIndex == 0) {
-			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
+			SDL_SetRenderDrawColor(renderer, 80, 80, 80, 70);
 			SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 			SDL_RenderDrawRect(renderer, &worldTile);
 		}
@@ -79,9 +80,11 @@ void Zone::saveZone()
 
 	//std::ofstream ZoneFile(fileName, std::ios::binary | std::ofstream::trunc);
 	std::ofstream ZoneFile(fileName, std::ofstream::trunc);
-	ZoneFile << "Zone Name: " + zoneName + "\n";
-	ZoneFile << "Act Number: " + std::to_string(actNo) + "\n";
-	ZoneFile << "Sprite Set: " + tileSetPath + "\n";
+	ZoneFile << zoneName + "\n";
+	ZoneFile << std::to_string(actNo) + "\n";
+	ZoneFile << tileSetPath + "\n";
+	ZoneFile << std::to_string(zoneWidth) + "\n";
+	ZoneFile << std::to_string(zoneHeight) + "\n";
 	for (int y = 0; y < zoneHeight; y++) {
 		for (int x = 0; x < zoneWidth; x++) {
 			Tile* currentTile = &mapSet[x + (y * zoneWidth)];
@@ -102,4 +105,48 @@ void Zone::saveZone()
 	}
 
 	ZoneFile.close();
+}
+
+Zone* Zone::OpenZone(SDL_Renderer* renderer, std::string zonePath)
+{
+	std::ifstream zoneFile(zonePath);
+	std::string text;
+	std::vector<std::string> zoneMetaData;
+	std::vector<uint16_t> zoneData;
+	int iterator = 0;
+
+	do {
+		std::getline(zoneFile, text);
+		zoneMetaData.push_back(text);
+		iterator++;
+	} while (iterator < 5);
+
+	while (zoneFile >> text) {
+		for (int i = 0; i < text.size(); i += 2) {
+			uint16_t data = 0;
+			data |= ((uint8_t)text[i + 1] << 8);
+			data |= ((uint16_t)text[i]);
+
+			zoneData.push_back(data);
+		}
+	}
+
+	zoneFile.close();
+
+	Zone* zoneOut = new Zone(renderer, zoneMetaData[0], stoi(zoneMetaData[1]), { 23, 27, 33, 255 }, zoneMetaData[2], stoi(zoneMetaData[3]), stoi(zoneMetaData[4]));
+	std::vector<Tile> loadedTileSet;
+	for (uint16_t tileData : zoneData) {
+		Tile loadedTile;
+		loadedTile.foreground = (tileData & 0x8000) >> 15;
+		loadedTile.flipH = (tileData & 0x4000) >> 14;
+		loadedTile.flipV = (tileData & 0x2000) >> 13;
+		loadedTile.palette = (tileData & 0x1800) >> 11;
+		loadedTile.tileMapIndex = (tileData & 0x7FF);
+
+		loadedTileSet.push_back(loadedTile);
+	}
+
+	zoneOut->mapSet = loadedTileSet;
+
+	return zoneOut;
 }
