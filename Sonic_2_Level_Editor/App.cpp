@@ -86,7 +86,7 @@ void handleTextboxInput(OptionItem* selectedItem, Zone* currentZone, bool save) 
 
 // Get the position of the selected tile in the options bar
 int* getActiveTilePos(int tile, int tileScreenSize) {
-	int pos[2];
+	int pos[2]{};
 
 	pos[0] = (tile % 20) * tileScreenSize + settings.getScreenWidth() + settings.MENU_PADDING;
 	pos[1] = (tile / 20) * tileScreenSize + settings.MENU_PADDING;
@@ -366,7 +366,7 @@ void App::onLoop()
 					if (mouse.position.first >= xPos && mouse.position.first < xPos + tileSize
 						&& mouse.position.second >= yPos && mouse.position.second < yPos + tileSize) {
 						Tile* currentTile = &currentZone->mapSet[x + (y * currentZone->zoneWidth)];
-			-			currentTile->reset();
+						currentTile->reset();
 
 						goto endR;
 					}
