@@ -1,5 +1,5 @@
 #include "App.h"
-//#include <SDL3/SDL_image.h>
+
 #include <SDL_image.h>
 #include <cmath>
 #include <nfd.hpp>
@@ -167,26 +167,24 @@ void App::onEvent(SDL_Event* event)
 		_running = false;
 		break;
 	case SDL_KEYDOWN:
-		keyboard[event->key.keysym.sym] = true;
+		keyboard.keys[event->key.keysym.sym] = true;
 		if (selectedItem != nullptr) selectedItem->onType(event->key.keysym.sym);
 		break;
 	case SDL_KEYUP:
-		keyboard[event->key.keysym.sym] = false;
+		keyboard.keys[event->key.keysym.sym] = false;
 		break;
 	case SDL_MOUSEBUTTONDOWN:
-		mouse[event->button.button] = true;
+		mouse.buttons[event->button.button] = true;
 		break;
 	case SDL_MOUSEBUTTONUP:
-		mouse[event->button.button] = false;
+		mouse.buttons[event->button.button] = false;
 		break;
 	case SDL_MOUSEMOTION:
-		mouseX = event->motion.x;
-		mouseY = event->motion.y;
-		movementX = event->motion.xrel;
-		movementY = event->motion.yrel;
+		mouse.setPosition(event->motion.x, event->motion.y);
+		mouse.setMotion(event->motion.xrel, event->motion.yrel);
 		break;
 	case SDL_MOUSEWHEEL:
-		mouseWheel = event->wheel.y;
+		mouse.wheel = event->wheel.y;
 		break;
 	case SDL_WINDOWEVENT:
 		if (event->window.event == SDL_WINDOWEVENT_RESIZED) {
@@ -224,8 +222,8 @@ void App::onLoop()
 	// If hovering over an option in the menu, set it as hovered and change the cursor.
 	for (int i = 0; i < optionMenu->options.size(); i++) {
 		if (optionMenu->options[i].type == Button || optionMenu->options[i].type == TextInput || optionMenu->options[i].type == NumberInput) {
-			if (mouseX >= optionMenu->options[i].rect->x && mouseX <= optionMenu->options[i].rect->x + optionMenu->options[i].rect->w
-				&& mouseY >= optionMenu->options[i].rect->y && mouseY <= optionMenu->options[i].rect->y + optionMenu->options[i].rect->h) {
+			if (mouse.position.first >= optionMenu->options[i].rect->x && mouse.position.first <= optionMenu->options[i].rect->x + optionMenu->options[i].rect->w
+				&& mouse.position.second >= optionMenu->options[i].rect->y && mouse.position.second <= optionMenu->options[i].rect->y + optionMenu->options[i].rect->h) {
 				cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 				optionMenu->options[i].hovered = true;
 			}
@@ -236,26 +234,26 @@ void App::onLoop()
 	// Check if a menu option is selected
 	if (selectedItem == nullptr) {
 		// Camera movement using keyboard keys
-		if (keyboard[SDLK_a] || keyboard[SDLK_LEFT]) camX += tileSize;
-		if (keyboard[SDLK_d] || keyboard[SDLK_RIGHT]) camX -= tileSize;
-		if (keyboard[SDLK_w] || keyboard[SDLK_UP]) camY += tileSize;
-		if (keyboard[SDLK_s] || keyboard[SDLK_DOWN]) camY -= tileSize;
+		if (keyboard.keys[SDLK_a] || keyboard.keys[SDLK_LEFT]) camX += tileSize;
+		if (keyboard.keys[SDLK_d] || keyboard.keys[SDLK_RIGHT]) camX -= tileSize;
+		if (keyboard.keys[SDLK_w] || keyboard.keys[SDLK_UP]) camY += tileSize;
+		if (keyboard.keys[SDLK_s] || keyboard.keys[SDLK_DOWN]) camY -= tileSize;
 	
 		// Camera zoom using keyboard keys
-		if (keyboard[SDLK_EQUALS] || mouseWheel > 0) if (tileSize < 64) tileSize++;
-		if (keyboard[SDLK_MINUS] || mouseWheel < 0) if (tileSize > 16) tileSize--;
+		if (keyboard.keys[SDLK_EQUALS] || mouse.wheel > 0) if (tileSize < 64) tileSize++;
+		if (keyboard.keys[SDLK_MINUS] || mouse.wheel < 0) if (tileSize > 16) tileSize--;
 	}
 	else {
 		if (selectedItem->type == TextInput || selectedItem->type == NumberInput) {
 			// If return is pressed, confirm edit to menu option
-			if (keyboard[SDLK_RETURN]) {
+			if (keyboard.keys[SDLK_RETURN]) {
 				handleTextboxInput(selectedItem, currentZone, true);
 
 				selectedItem->selected = false;
 				selectedItem = nullptr;
 			}
 			// If escape is pressed, disgard edit to menu option
-			if (keyboard[SDLK_ESCAPE]) {
+			if (keyboard.keys[SDLK_ESCAPE]) {
 				handleTextboxInput(selectedItem, currentZone, false);
 
 				selectedItem->selected = false;
@@ -277,15 +275,18 @@ void App::onLoop()
 				if (result == 1) loadDefaultZone();
 			}
 			else if (selectedItem->name == "SaveButton") {
-				currentZone->saveZone();
+				NFD::UniquePath outPath;
+				nfdfilteritem_t filterItem[1] = { "Zone File", "zone" };
+				nfdresult_t result = NFD::SaveDialog(outPath, filterItem, 1 , NULL, "Untitled.zone");
+				if (result == NFD_OKAY) {
+					currentZone->saveZone(outPath.get());
+				}
 			}
 			else if (selectedItem->name == "LoadButton") {
 				NFD::UniquePath outPath;
-				nfdfilteritem_t filterItem[1] = {"Zone File", "zone"};
+				nfdfilteritem_t filterItem[1] = { "Zone File", "zone" };
 				nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
 				if (result == NFD_OKAY) {
-					//std::cout << "Success!" << std::endl << outPath.get() << std::endl;
-
 					currentZone = Zone::OpenZone(renderer, outPath.get());
 				}
 			}
@@ -295,7 +296,7 @@ void App::onLoop()
 		}
 	}
 	
-	if (mouse[SDL_BUTTON_LEFT]) {
+	if (mouse.buttons[SDL_BUTTON_LEFT]) {
 		// Check if an option has been clicked. If it has, then if it can be selected, select it.
 		// Else, if anywhere else is clicked then unselect any selected items.
 		for (int i = 0; i < optionMenu->options.size(); i++) {
@@ -322,21 +323,21 @@ void App::onLoop()
 			for (int y = 0; y < 20; y++) {
 				int xPos = (x * tileScreenSize) + settings.getScreenWidth() + 20;
 				int yPos = (y * tileScreenSize) + 20;
-				if (mouseX >= xPos && mouseX < xPos + tileScreenSize
-					&& mouseY >= yPos && mouseY < yPos + tileScreenSize) {
+				if (mouse.position.first >= xPos && mouse.position.first < xPos + tileScreenSize
+					&& mouse.position.second >= yPos && mouse.position.second < yPos + tileScreenSize) {
 					activeTile = x + (y * 20);
 				}
 			}
 		}
 
 		// If the mouse is clicked outside of the option menu, place a tile at the selected area.
-		if (mouseX < settings.getScreenWidth()) {
+		if (mouse.position.first < settings.getScreenWidth()) {
 			for (int x = 0; x < currentZone->zoneWidth; x++) {
 				for (int y = 0; y < currentZone->zoneHeight; y++) {
 					int xPos = (x * tileSize) + camX;
 					int yPos = (y * tileSize) + camY;
-					if (mouseX >= xPos && mouseX < xPos + tileSize
-						&& mouseY >= yPos && mouseY < yPos + tileSize) {
+					if (mouse.position.first >= xPos && mouse.position.first < xPos + tileSize
+						&& mouse.position.second >= yPos && mouse.position.second < yPos + tileSize) {
 						currentZone->mapSet[x + (y * currentZone->zoneWidth)] = {
 							true, 
 							(SDL_GetModState() & KMOD_LSHIFT) ? true : false,
@@ -353,19 +354,19 @@ void App::onLoop()
 
 		// If mouse is being held in the main screen, and is moved to the menu, unclick the mouse
 		endL:
-		mouse[SDL_BUTTON_LEFT] = false;
+		mouse.buttons[SDL_BUTTON_LEFT] = false;
 	}
-	if (mouse[SDL_BUTTON_RIGHT]) {
+	if (mouse.buttons[SDL_BUTTON_RIGHT]) {
 		// If the mouse is clicked outside of the option menu, remove a tile at the selected area.
-		if (mouseX < settings.getScreenWidth()) {
+		if (mouse.position.first < settings.getScreenWidth()) {
 			for (int x = 0; x < currentZone->zoneWidth; x++) {
 				for (int y = 0; y < currentZone->zoneHeight; y++) {
 					int xPos = (x * tileSize) + camX;
 					int yPos = (y * tileSize) + camY;
-					if (mouseX >= xPos && mouseX < xPos + tileSize
-						&& mouseY >= yPos && mouseY < yPos + tileSize) {
+					if (mouse.position.first >= xPos && mouse.position.first < xPos + tileSize
+						&& mouse.position.second >= yPos && mouse.position.second < yPos + tileSize) {
 						Tile* currentTile = &currentZone->mapSet[x + (y * currentZone->zoneWidth)];
-						currentTile->reset();
+			-			currentTile->reset();
 
 						goto endR;
 					}
@@ -375,22 +376,22 @@ void App::onLoop()
 
 		// If mouse is being held in the main screen, and is moved to the menu, unclick the mouse
 		endR:
-		mouse[SDL_BUTTON_RIGHT] = false;
+		mouse.buttons[SDL_BUTTON_RIGHT] = false;
 	}
-	if (mouse[SDL_BUTTON_MIDDLE]) {
+	if (mouse.buttons[SDL_BUTTON_MIDDLE]) {
 		// if the mouse is within the bounds of the editor (not including options)
 		// then move the camera by the amount dragged by the mouse.
-		if (mouseX > 0 && mouseX < settings.getScreenWidth()
-			&& mouseY > 0 && mouseY < settings.getWindowHeight()) {
+		if (mouse.position.first > 0 && mouse.position.first < settings.getScreenWidth()
+			&& mouse.position.second > 0 && mouse.position.second < settings.getWindowHeight()) {
 			cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
-			camX += tileSize * movementX * 2;
-			camY += tileSize * movementY * 2;
+			camX += tileSize * mouse.motion.first * 2;
+			camY += tileSize * mouse.motion.second * 2;
 		}
 	}
 
 	// Change the cursor when hovering over the tileset in the options menu
-	if (mouseX >= settings.getScreenWidth() + 20 && mouseX <= settings.getScreenWidth() + settings.getOptionsWidth() - 20
-		&& mouseY >= 20 && mouseY <= settings.getOptionsWidth() - 20) {
+	if (mouse.position.first >= settings.getScreenWidth() + 20 && mouse.position.first <= settings.getScreenWidth() + settings.getOptionsWidth() - 20
+		&& mouse.position.second >= 20 && mouse.position.second <= settings.getOptionsWidth() - 20) {
 			cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 	}
 
@@ -404,7 +405,8 @@ void App::onLoop()
 		camY = -((currentZone->zoneHeight * tileSize) + (tileSize * 10) - settings.getWindowHeight());
 
 	// Reset movement/zoom vectors for the next frame.
-	mouseWheel = 0; movementX = 0; movementY = 0;
+	mouse.wheel = 0;
+	mouse.setMotion(0, 0);
 	SDL_SetCursor(cursor);
 }
 
@@ -434,8 +436,8 @@ void App::onRender()
 	// when hovering over a tile in the options menu, highlight it.
 	for (int x = settings.getScreenWidth() + settings.MENU_PADDING; x < settings.getWindowWidth() - settings.MENU_PADDING; x += tileScreenSize) {
 		for (int y = settings.MENU_PADDING; y < settings.getOptionsWidth() - settings.MENU_PADDING; y += tileScreenSize) {
-			if (mouseX >= x && mouseX < x + tileScreenSize
-				&& mouseY >= y && mouseY < y + tileScreenSize) {
+			if (mouse.position.first >= x && mouse.position.first < x + tileScreenSize
+				&& mouse.position.second >= y && mouse.position.second < y + tileScreenSize) {
 				gameRenderer->renderFilledRect({ x, y, tileScreenSize, tileScreenSize }, { 255, 255, 255 ,120 });
 			}
 		}

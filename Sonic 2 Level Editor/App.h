@@ -5,7 +5,11 @@
 #include <SDL_image.h>
 #include <map>
 #include <vector>
+
 #include "Settings.h"
+#include "Mouse.h"
+#include "Keyboard.h"
+
 #include "OptionItem.h"
 #include "Zone.h"
 #include "Renderer.h"
@@ -27,17 +31,17 @@ private:
 	int activeTile = 0;
 
 	float camX, camY;
-	float mouseX, mouseY;
-	float movementX, movementY;
-	int mouseWheel;
+	//float mouseX, mouseY;
+	//float movementX, movementY;
+	//int mouseWheel;
 
 	int tileSize;
 
 	Zone* currentZone;
 	OptionItem* selectedItem;
 
-	std::map<int, bool> keyboard;
-	std::map<int, bool> mouse;
+	//std::map<int, bool> keyboard;
+	//std::map<int, bool> mouse;
 
 	SDL_Texture* currentTileSet;
 

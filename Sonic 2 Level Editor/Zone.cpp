@@ -1,8 +1,9 @@
 #include <SDL_image.h>
+#include <iostream>
+#include <nfd.hpp>
 
 #include "Zone.h"
 #include "Settings.h"
-#include <iostream>
 
 Zone::Zone(SDL_Renderer* renderer, std::string zoneName, int actNo, SDL_Color background, std::string tileSetPath, int width, int height)
 {
@@ -64,22 +65,9 @@ void Zone::renderZone(float camX, float camY, int tileSize) {
 // Save the zone under /Zones/XXN.zone:
 // X: First letter of each word in zone
 // N: Act number
-void Zone::saveZone()
+void Zone::saveZone(std::string filePath)
 {
-	std::string fileName = "..\\Zones\\";
-
-	std::istringstream iss(zoneName);
-	std::string word;
-	while (std::getline(iss, word, ' ')) {
-		fileName += toupper(word[0]);
-	}
-
-	fileName += std::to_string(actNo) + ".zone";
-
-	//std::replace(fileName.begin(), fileName.end(), ' ', '_');
-
-	//std::ofstream ZoneFile(fileName, std::ios::binary | std::ofstream::trunc);
-	std::ofstream ZoneFile(fileName, std::ofstream::trunc);
+	std::ofstream ZoneFile(filePath, std::ofstream::trunc);
 	ZoneFile << zoneName + "\n";
 	ZoneFile << std::to_string(actNo) + "\n";
 	ZoneFile << tileSetPath + "\n";
@@ -104,7 +92,7 @@ void Zone::saveZone()
 		ZoneFile << "\n";
 	}
 
-	ZoneFile.close();
+	ZoneFile.close();		
 }
 
 Zone* Zone::OpenZone(SDL_Renderer* renderer, std::string zonePath)
